@@ -29,9 +29,10 @@ spec:
         - '-c'
         - |
             #!/bin/bash
+            set -x
 
             # Better rollout pod check
-            sleep 30
+            sleep 3600
 
             VAULT=$(oc -n {{ .Release.Namespace }} get pod -lapp.kubernetes.io/name=vault -o custom-columns=.:.metadata.name --no-headers)
 
