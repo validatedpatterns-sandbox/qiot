@@ -37,7 +37,7 @@ spec:
         image: {{ .Values.vault.image.repository }}:{{ .Values.vault.image.tag }}
         env:
         - name: VAULT_ADDR
-          value: {{ .Values.vault.schema }}://{{ .Release.Name }}.{{ .Release.Namespace }}.svc:{{ .Values.vault.port }}
+          value: https://vault-internal.vault.svc.cluster.local:8200
         envFrom:
         - secretRef:
             name: {{ include "vault-bootstrap.fullname" . }}
