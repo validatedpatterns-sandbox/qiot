@@ -6,10 +6,10 @@ metadata:
   name: {{ include "vault-bootstrap.fullname" . }}-init
   labels:
     {{- include "vault-bootstrap.labels" . | nindent 4 }}
-  annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "0"
+  #annotations:
+    #"helm.sh/hook": post-install
+    #"helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    #"helm.sh/hook-weight": "0"
 spec:
   backoffLimit: 0
   ttlSecondsAfterFinished: 120
