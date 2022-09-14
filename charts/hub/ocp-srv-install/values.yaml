@@ -1,0 +1,7 @@
+name: manufacturing-datacenter-srv-install
+plantmanagerservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="subscription-consumer" password="cy53Y0NW45Po";'
+productlineservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="productline-producer" password="hO0qknjVjI0J";'
+eventcollectorservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="telemetry-consumer" password="W01HrSmC1w6P";'

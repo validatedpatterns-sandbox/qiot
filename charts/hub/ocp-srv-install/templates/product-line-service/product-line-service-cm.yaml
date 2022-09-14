@@ -1,0 +1,19 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.mongodb.connection-string=mongodb://mongodb:27017
+    quarkus.mongodb.database=qiot_manufacturing
+    quarkus.mongodb.credentials.username=qiotmanufacturing
+    quarkus.mongodb.credentials.password=qiotmanufacturingpassword
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap:9095
+    kafka.security.protocol=SASL_PLAINTEXT
+    kafka.sasl.jaas.config={{ .Values.productlineservice.sasl }}
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.outgoing.productline.connector=smallrye-kafka
+    mp.messaging.outgoing.productline.topic=productline
+    mp.messaging.outgoing.productline.value.serializer=io.qiot.manufacturing.datacenter.productline.util.serializer.GlobalProductLineSerializer
+kind: ConfigMap
+metadata:
+  name: product-line-service

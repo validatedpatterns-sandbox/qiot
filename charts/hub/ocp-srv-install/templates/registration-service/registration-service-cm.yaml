@@ -1,0 +1,10 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.vault.tls.use-kubernetes-ca-cert=false
+    quarkus.vault.tls.ca-cert=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+    quarkus.kubernetes-client.namespace={{ .Release.Namespace }}
+    qiot.cert-manager.issuer=ocp-install-issuer-vault
+kind: ConfigMap
+metadata:
+  name: registration-service

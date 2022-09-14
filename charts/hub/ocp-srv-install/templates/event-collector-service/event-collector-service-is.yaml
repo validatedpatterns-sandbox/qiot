@@ -1,0 +1,16 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: event-collector-service
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/qiotmanufacturing/datacenter-event-collector-jvm
+    generation: 2
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Local

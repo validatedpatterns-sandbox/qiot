@@ -1,0 +1,27 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.ssl.native=true
+    quarkus.http.ssl-port=8443
+    quarkus.http.ssl.certificate.key-store-file=/cert/keystore.p12
+    quarkus.http.ssl.certificate.key-store-password=password
+    quarkus.http.insecure-requests=enabled
+    registration-service-api/mp-rest/url=http://registration-service:8080
+    quarkus.datasource.jdbc.url=jdbc:postgresql://postgresql:5432/qiot_manufacturing
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap:9095
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_PLAINTEXT
+    kafka.sasl.jaas.config={{ .Values.plantmanagerservice.sasl }}
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.incoming.machinerysubscription.connector=smallrye-kafka
+    mp.messaging.incoming.machinerysubscription.topic=machinerysubscription
+    mp.messaging.incoming.machinerysubscription.auto-generated-client-id=true
+    mp.messaging.incoming.machinerysubscription.auto.offset.reset=latest
+    mp.messaging.incoming.machinerysubscription.group.id=plant-manager
+    mp.messaging.incoming.machinerysubscription.failure-strategy=ignore
+    mp.messaging.incoming.machinerysubscription.value.deserializer=io.qiot.manufacturing.datacenter.commons.util.serializer.MachinerySubscriptionRequestDeserializer
+kind: ConfigMap
+metadata:
+  name: plant-manager-service

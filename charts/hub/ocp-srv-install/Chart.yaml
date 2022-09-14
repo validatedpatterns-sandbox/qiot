@@ -1,0 +1,6 @@
+apiVersion: v2
+name: manufacturing-datacenter-srv-install
+description: Helm chart to deploy business logic services on the Datacenter
+type: application
+version: 0.0.1
+appVersion: "1.0.0"

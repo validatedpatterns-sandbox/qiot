@@ -1,0 +1,30 @@
+
+---
+apiVersion: v1
+data:
+  password: cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  name: keystore-secret-bootstrap
+type: Opaque
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bootstrap
+spec:
+  commonName: plant-manager-service.manufacturing-dev.qiot-project.io
+  dnsNames:
+  - plant-manager-service.manufacturing-dev.qiot-project.io
+  - plant-manager-service-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com
+  - plant-manager-service.manufacturing-dev.svc
+  issuerRef:
+    name: ocp-install-issuer-vault
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: password
+        name: keystore-secret-bootstrap
+  secretName: bootstrap-certificate
