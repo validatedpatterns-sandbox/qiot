@@ -1,0 +1,18 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  ports:
+    - name: 27017-tcp
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+    deploymentconfig: mongodb
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack

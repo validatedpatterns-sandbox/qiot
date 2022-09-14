@@ -1,0 +1,26 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: subscription-producer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Write
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+    type: simple

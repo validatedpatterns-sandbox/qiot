@@ -1,0 +1,32 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: productline-consumer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Read
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: productline
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Read
+        resource:
+          name: product-line
+          patternType: prefix
+          type: group
+        type: allow
+    type: simple

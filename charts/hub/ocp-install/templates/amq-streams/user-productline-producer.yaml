@@ -1,0 +1,27 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: productline-producer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Write
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+    type: simple
+    

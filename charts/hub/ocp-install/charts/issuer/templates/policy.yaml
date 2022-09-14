@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "issuer.fullname" . }}-policy
+  labels:
+    {{- include "issuer.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  namespace: {{ .Values.issuer.vault.namespace }}
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        {{- include "issuer.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: policy
+        envFrom:
+        - secretRef:
+            name: {{ .Values.issuer.vault.secret }}
+        image: {{ .Values.issuer.vault.image.repository }}:{{ .Values.issuer.vault.image.tag }}
+        env:
+        - name: VAULT_ADDR
+          value: {{ .Values.issuer.vault.server }}
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+            cat > policy.hcl << EOF
+            path "sys/mounts/{{ .Release.Namespace }}-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+
+            path "/{{ .Release.Namespace }}-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+            EOF
+
+            vault policy write -tls-skip-verify registration-{{ .Release.Namespace }}-admin ./policy.hcl
+
+            vault write -tls-skip-verify auth/kubernetes/role/{{ .Release.Namespace }}-reg-policy \
+              bound_service_account_names=registration-service \
+              bound_service_account_namespaces={{ .Release.Namespace }} \
+              policies=registration-{{ .Release.Namespace }}-admin ttl=1h
+
+          

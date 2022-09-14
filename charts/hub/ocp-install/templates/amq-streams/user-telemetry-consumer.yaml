@@ -1,0 +1,33 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: telemetry-consumer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Read
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Read
+        resource:
+          name: event-collector
+          patternType: prefix
+          type: group
+        type: allow
+    type: simple

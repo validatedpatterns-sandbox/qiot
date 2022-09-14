@@ -1,0 +1,56 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "issuer.fullname" . }}-cleanup
+  labels:
+    {{- include "issuer.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "0"
+  namespace: {{ .Values.issuer.vault.namespace }}
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        {{- include "issuer.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cleanup
+        envFrom:
+        - secretRef:
+            name: {{ .Values.issuer.vault.secret }}
+        image: {{ .Values.issuer.vault.image.repository }}:{{ .Values.issuer.vault.image.tag }}
+        env:
+        - name: VAULT_ADDR
+          value: {{ .Values.issuer.vault.server }}
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+
+          if [ "$#" -ne 1 ]; then
+              echo "Missing Projects"
+          fi
+
+          export BASE_DOMAIN={{ .Values.baseDomain }}
+          export PROJECT={{ .Release.Namespace }}
+          export PKI=${PROJECT}-pki
+          export DOMAIN=${PROJECT}.$BASE_DOMAIN
+          export ROLE=${PROJECT}-$BASE_DOMAIN
+          # In future create a dedicate SA during project provision
+          export SERVICE_ACCOUNT=default
+          export WILDCARD_DOMAIN={{ .Values.wildcardDomain }}
+
+          echo "Cleanup on ${PROJECT}"
+
+          echo "Disable PKI Engine ${PKI}"
+
+          vault secrets disable -tls-skip-verify --path=${PKI}
+
+          vault delete --tls-skip-verify auth/kubernetes/role/${ROLE}
