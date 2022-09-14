@@ -8,8 +8,8 @@ wildcardDomain: ""
 issuer:
   vault:
     namespace: vault
-    secret: vault-vault-bootstrap
-    server: https://vault-internal.hashicorp.svc.cluster.local:8200
+    secret: vault-bootstrap
+    server: https://vault-internal.vault.svc.cluster.local:8200
     image:
       repository: "registry.connect.redhat.com/hashicorp/vault"
       tag: "1.11.3-ubi"
