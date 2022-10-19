@@ -1,71 +1,113 @@
+# Hashicorp Vault Helm Chart
+global:
+  tlsDisable: false
+
+vault:
+  ui:
+    enabled: true
+
+  server:
+    extraEnvironmentVars:
+      VAULT_CAPATH: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+      VAULT_ADDR: https://vault-internal.vault.svc.cluster.local:8200
+
+    standalone:
+      enabled: true
+      config: |
+        ui = true
+        listener "tcp" {
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+          tls_cert_file = "/vault/userconfig/vault-secret/tls.crt"
+          tls_key_file = "/vault/userconfig/vault-secret/tls.key"
+        }
+        storage "file" {
+          path = "/vault/data"
+        }
+
+    extraVolumes:
+    - type: secret
+      name: vault-secret
+
+    service:
+      enabled: true
+      annotations:
+        service.beta.openshift.io/serving-cert-secret-name: vault-secret
+
 clusterGroup:
   name: hub
   isHubCluster: true
   # Note: setting this to true stores the vault unseal keys inside a cluster secret and
   # is fundamentally insecure
-  insecureUnsealVaultInsideCluster: true
+  insecureUnsealVaultInsideCluster: false
 
   namespaces:
-  - open-cluster-management
   - vault
   - golang-external-secrets
-  - config-demo
-
-  subscriptions:
-    acm:
-      name: advanced-cluster-management
-      namespace: open-cluster-management
-      channel: release-2.5
-      csv: advanced-cluster-management.v2.5.0
+  - manufacturing-dev
 
   projects:
   - hub
-  - config-demo
+
+  subscriptions:
+    amqstreams-dev:
+      name: amq-streams
+      namespace: manufacturing-dev
+      channel: amq-streams-1.8.x
+      csv: amqstreams.v1.8.4
+
+    cert-manager-dev:
+      name: cert-manager
+      channel: stable
+      source: community-operators
+      csv: cert-manager.v1.9.1
 
   applications:
-    acm:
-      name: acm
-      namespace: open-cluster-management
-      project: hub
-      path: common/acm
-      ignoreDifferences:
-      - group: internal.open-cluster-management.io
-        kind: ManagedClusterInfo
-        jsonPointers:
-          - /spec/loggingCA
-
     vault:
       name: vault
       namespace: vault
       project: hub
       path: common/hashicorp-vault
 
-    golang-external-secrets:
-      name: golang-external-secrets
-      namespace: golang-external-secrets
+    # golang-external-secrets:
+    #   name: golang-external-secrets
+    #   namespace: golang-external-secrets
+    #   project: hub
+    #   path: common/golang-external-secrets
+
+    vault-bootstrap:
+      name: vault-bootstrap
+      namespace: vault
       project: hub
-      path: common/golang-external-secrets
+      path: charts/hub/vault-bootstrap
 
-    config-demo:
-      name: config-demo
-      namespace: config-demo
-      project: config-demo
-      path: charts/all/config-demo
+    # ocp-install:
+    #   name: ocp-install
+    #   namespace: manufacturing-dev
+    #   project: hub
+    #   path: charts/hub/ocp-install
 
-  imperative:
+    # ocp-srv-install:
+    #   name: ocp-srv-install
+    #   namespace: manufacturing-dev
+    #   project: hub
+    #   path: charts/hub/ocp-srv-install
+
+
+      #imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
     # The default schedule is every 10 minutes: imperative.schedule
     # Total timeout of all jobs is 1h: imperative.activeDeadlineSeconds
     # imagePullPolicy is set to always: imperative.imagePullPolicy
     # For additional overrides that apply to the jobs, please refer to
     # https://hybrid-cloud-patterns.io/imperative-actions/#additional-job-customizations
-    jobs:
-    - name: regional-ca
-      # ansible playbook to be run
-      playbook: ansible/playbooks/on-hub-get-regional-ca.yml
-      # per playbook timeout in seconds
-      timeout: 234
-      # verbosity: "-v"
+    # jobs:
+    # - name: regional-ca
+    #   # ansible playbook to be run
+    #   playbook: ansible/playbooks/on-hub-get-regional-ca.yml
+    #   # per playbook timeout in seconds
+    #   timeout: 234
+    #   # verbosity: "-v"
 
   managedClusterGroups:
     exampleRegion:
