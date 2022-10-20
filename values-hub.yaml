@@ -87,11 +87,11 @@ clusterGroup:
     #   project: hub
     #   path: charts/hub/ocp-install
 
-    # ocp-srv-install:
-    #   name: ocp-srv-install
-    #   namespace: manufacturing-dev
-    #   project: hub
-    #   path: charts/hub/ocp-srv-install
+    ocp-srv-install:
+      name: ocp-srv-install
+      namespace: manufacturing-dev
+      project: hub
+      path: charts/hub/ocp-srv-install
 
 
       #imperative:
