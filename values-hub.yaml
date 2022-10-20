@@ -105,7 +105,7 @@ clusterGroup:
     # For additional overrides that apply to the jobs, please refer to
     # https://hybrid-cloud-patterns.io/imperative-actions/#additional-job-customizations
     # The openshift service ca job needs to be able to create a secret in the vault namespace
-    clusterRoleYaml: |
+    clusterRoleYaml:
       - apiGroups:
         - '*'
         resources:
