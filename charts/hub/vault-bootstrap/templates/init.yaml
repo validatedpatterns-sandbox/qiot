@@ -57,8 +57,8 @@ spec:
               data:
             EOF
 
-            echo "  KEYS=${KEYS}" >> /tmp/secret.yaml
-            echo "  VAULT_TOKEN=${VAULT_TOKEN}" >> /tmp/secret.yaml
+            echo "  KEYS: ${KEYS}" >> /tmp/secret.yaml
+            echo "  VAULT_TOKEN: ${VAULT_TOKEN}" >> /tmp/secret.yaml
 
             oc apply -f /tmp/secret.yaml
 {{- end }}
