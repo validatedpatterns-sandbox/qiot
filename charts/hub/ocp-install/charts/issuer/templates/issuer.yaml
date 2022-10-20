@@ -1,5 +1,5 @@
 {{- $sa := (lookup "v1" "ServiceAccount" .Release.Namespace "default" ) -}}
-{{- $bundle := (lookup "v1" "ConfigMap" .Release.Namespace  "openshift-service-ca.crt" ) -}}
+#{{- $bundle := (lookup "v1" "ConfigMap" .Release.Namespace  "openshift-service-ca.crt" ) -}}
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
@@ -11,7 +11,10 @@ spec:
   vault:
     path: {{ .Release.Namespace }}-pki/sign/{{ .Values.baseDomain }} 
     server: {{ .Values.issuer.vault.server }}
-    caBundle: {{ get $bundle.data "service-ca.crt" | b64enc }}
+    #caBundle: {{ get $bundle.data "service-ca.crt" | b64enc }}
+    caBundleSecretRef:
+      name: openshift-service-ca.crt
+      key: caBundle
     auth:
       kubernetes:
         role: {{ .Release.Namespace }}-{{ .Values.baseDomain }}
