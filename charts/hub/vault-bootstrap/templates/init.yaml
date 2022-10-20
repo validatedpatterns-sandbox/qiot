@@ -36,6 +36,10 @@ spec:
             VAULT=$(oc -n {{ .Release.Namespace }} get pod -lapp.kubernetes.io/name=vault -o custom-columns=.:.metadata.name --no-headers)
 
             echo "Found pod: $VAULT"
+            INITIALIZED=$(oc -n {{ .Release.Namespace }} exec ${VAULT} -- sh -c "if vault status -tls-skip-verify | grep 'Initialized' | grep -q 'true'; then echo 'TRUE'; else echo 'FALSE'; fi"
+            if [[ "$INITIALIZED" == "TRUE" ]]; then
+              exit 0
+            fi
 
             oc -n {{ .Release.Namespace }} exec ${VAULT} --  vault operator init -tls-skip-verify -key-shares=1 -key-threshold=1 >/tmp/init.txt
 
