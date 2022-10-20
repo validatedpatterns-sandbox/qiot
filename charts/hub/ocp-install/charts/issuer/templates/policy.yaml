@@ -49,5 +49,3 @@ spec:
               bound_service_account_names=registration-service \
               bound_service_account_namespaces={{ .Release.Namespace }} \
               policies=registration-{{ .Release.Namespace }}-admin ttl=1h
-
-          

@@ -1,4 +1,13 @@
 {{- $sa := (lookup "v1" "ServiceAccount" .Release.Namespace "default" ) -}}
+# Force a token for the vault user so we can use its name in the vault issuer template
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registration-service-secret
+  annotations:
+    kubernetes.io/service-account.name: registration-service
+type: kubernetes.io/service-account-token
 ---
 apiVersion: cert-manager.io/v1
 kind: Issuer
