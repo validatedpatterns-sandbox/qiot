@@ -6,7 +6,7 @@ global:
     kind: ClusterSecretStore
 
 cert-manager:
-  securityContext: null
+  installCRDs: true
 
 vault:
   ui:
