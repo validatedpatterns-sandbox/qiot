@@ -67,11 +67,11 @@ clusterGroup:
     #   csv: cert-manager.v1.9.1
 
   applications:
-    cert-manager-1.10:
-      name: cert-manager-1.10
+    cert-manager-1-10:
+      name: cert-manager-1-10
       namespace: cert-manager
       project: hub
-      path: charts/hub/cert-manager-1.10
+      path: charts/hub/cert-manager-1-10
 
     vault:
       name: vault
