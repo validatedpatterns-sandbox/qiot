@@ -15,7 +15,7 @@ vault:
   server:
     route:
       tls:
-        termination: "reencrypt"
+        termination: "passthrough"
 
     extraEnvironmentVars:
       VAULT_CAPATH: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
