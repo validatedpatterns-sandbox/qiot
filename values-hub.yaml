@@ -104,6 +104,28 @@ clusterGroup:
     # imagePullPolicy is set to always: imperative.imagePullPolicy
     # For additional overrides that apply to the jobs, please refer to
     # https://hybrid-cloud-patterns.io/imperative-actions/#additional-job-customizations
+    # The openshift service ca job needs to be able to create a secret in the vault namespace
+    clusterRoleYaml: |
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - '*'
+        resources:
+        - secrets
+        verbs:
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+
     jobs:
     - name: openshift-service-ca-secret
       playbook: ansible/playbooks/copy-service-ca-crt-to-secret.yml
