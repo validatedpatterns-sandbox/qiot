@@ -84,11 +84,11 @@ clusterGroup:
       project: hub
       path: charts/hub/vault-bootstrap
 
-    # ocp-install:
-    #   name: ocp-install
-    #   namespace: manufacturing-dev
-    #   project: hub
-    #   path: charts/hub/ocp-install
+    ocp-install:
+      name: ocp-install
+      namespace: manufacturing-dev
+      project: hub
+      path: charts/hub/ocp-install
 
     ocp-srv-install:
       name: ocp-srv-install
