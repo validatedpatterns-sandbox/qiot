@@ -49,12 +49,12 @@ spec:
             # Secret must not part of the release
             cat > /tmp/secret.yaml<<EOF
             kind: Secret
-              apiVersion: v1
-              type: Opaque
-              metadata:
-                name: {{ include "vault-bootstrap.fullname" . }}
-                namespace: {{ .Release.Namespace }}
-              data:
+            apiVersion: v1
+            type: Opaque
+            metadata:
+              name: {{ include "vault-bootstrap.fullname" . }}
+              namespace: {{ .Release.Namespace }}
+            data:
             EOF
 
             echo "  KEYS: ${KEYS}" >> /tmp/secret.yaml
