@@ -47,6 +47,7 @@ clusterGroup:
   namespaces:
   - vault
   - golang-external-secrets
+  - cert-manager
   - manufacturing-dev
 
   projects:
@@ -66,6 +67,12 @@ clusterGroup:
     #   csv: cert-manager.v1.9.1
 
   applications:
+    cert-manager-1.10:
+      name: cert-manager-1.10
+      namespace: cert-manager
+      project: hub
+      path: charts/hub/cert-manager-1.10
+
     vault:
       name: vault
       namespace: vault
