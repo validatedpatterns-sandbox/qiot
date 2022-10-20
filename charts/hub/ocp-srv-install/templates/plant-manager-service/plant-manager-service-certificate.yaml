@@ -21,10 +21,10 @@ spec:
     name: keystore-secret-bootstrap-prova
     template:
       type: Opaque
-    data:
-      password: {{ "{{ .keystore-password }}" }}
+      data:
+        password: {{ "{{ .keystorepassword }}" }}
   data:
-  - secretKey: keystore-password
+  - secretKey: keystorepassword
     remoteRef:
       key: secret/data/hub/plant-manager-certificate
       property: password
