@@ -42,9 +42,19 @@ spec:
             KEYS=$(cat /tmp/init.txt|grep "Unseal Key 1"|cut -d':' -f2| tr -d ' ')
             VAULT_TOKEN=$(cat /tmp/init.txt|grep "Initial Root Token"|cut -d':' -f2| tr -d ' ')
 
-            echo "KEYS=${KEYS}" > /tmp/vault.env
-            echo "VAULT_TOKEN=${VAULT_TOKEN}" >> /tmp/vault.env
-
             # Secret must not part of the release
-            oc create secret generic {{ include "vault-bootstrap.fullname" . }} --from-env-file=/tmp/vault.env
+            cat > /tmp/secret.yaml<<EOF
+            kind: Secret
+              apiVersion: v1
+              type: Opaque
+              metadata:
+                name: {{ include "vault-bootstrap.fullname" }}
+                namespace: {{ .Release.Namespace }}
+              data:
+            EOF
+
+            echo "  KEYS=${KEYS}" >> /tmp/secret.yaml
+            echo "  VAULT_TOKEN=${VAULT_TOKEN}" >> /tmp/secret.yaml
+
+            oc apply -f /tmp/secret.yaml
 {{- end }}
