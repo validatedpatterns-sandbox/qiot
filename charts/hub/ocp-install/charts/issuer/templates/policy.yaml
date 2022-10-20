@@ -6,9 +6,8 @@ metadata:
   labels:
     {{- include "issuer.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "helm.sh/hook-weight": "1"
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
   namespace: {{ .Values.issuer.vault.namespace }}
 spec:
   backoffLimit: 0
