@@ -48,7 +48,7 @@ spec:
               apiVersion: v1
               type: Opaque
               metadata:
-                name: {{ include "vault-bootstrap.fullname" }}
+                name: {{ include "vault-bootstrap.fullname" . }}
                 namespace: {{ .Release.Namespace }}
               data:
             EOF
