@@ -59,11 +59,11 @@ clusterGroup:
       channel: amq-streams-1.8.x
       csv: amqstreams.v1.8.4
 
-    cert-manager-dev:
-      name: cert-manager
-      channel: stable
-      source: community-operators
-      csv: cert-manager.v1.9.1
+    # cert-manager-dev:
+    #   name: cert-manager
+    #   channel: stable
+    #   source: community-operators
+    #   csv: cert-manager.v1.9.1
 
   applications:
     vault:
