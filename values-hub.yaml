@@ -13,6 +13,10 @@ vault:
     enabled: true
 
   server:
+    route:
+      tls:
+        termination: "reencrypt"
+
     extraEnvironmentVars:
       VAULT_CAPATH: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
       VAULT_ADDR: https://vault-internal.vault.svc.cluster.local:8200
