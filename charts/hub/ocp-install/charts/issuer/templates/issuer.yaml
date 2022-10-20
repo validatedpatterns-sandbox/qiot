@@ -19,8 +19,4 @@ spec:
         mountPath: /v1/auth/kubernetes
         secretRef:
           key: token
-          {{- range $sa.secrets }}
-          {{- if contains  "token" .name }}
-          name: {{ .name }}
-          {{- end -}}
-          {{- end }}
+          name: vault
