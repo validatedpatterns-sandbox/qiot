@@ -54,7 +54,7 @@ spec:
             metadata:
               name: {{ include "vault-bootstrap.fullname" . }}
               namespace: {{ .Release.Namespace }}
-            data:
+            stringData:
             EOF
 
             echo "  KEYS: ${KEYS}" >> /tmp/secret.yaml
