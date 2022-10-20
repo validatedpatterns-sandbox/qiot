@@ -5,6 +5,9 @@ global:
     name: vault-backend
     kind: ClusterSecretStore
 
+cert-manager:
+  securityContext: null
+
 vault:
   ui:
     enabled: true
