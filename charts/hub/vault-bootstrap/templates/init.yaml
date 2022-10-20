@@ -59,6 +59,7 @@ spec:
 
             echo "  KEYS: ${KEYS}" >> /tmp/secret.yaml
             echo "  VAULT_TOKEN: ${VAULT_TOKEN}" >> /tmp/secret.yaml
+            cat /tmp/secret.yaml
 
             oc apply -f /tmp/secret.yaml
 {{- end }}
