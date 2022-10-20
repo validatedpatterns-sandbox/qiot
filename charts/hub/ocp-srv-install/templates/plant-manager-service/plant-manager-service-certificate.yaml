@@ -7,28 +7,29 @@ metadata:
   name: keystore-secret-bootstrap
 type: Opaque
 ---
-apiVersion: "external-secrets.io/v1beta1"
-kind: ExternalSecret
-metadata:
-  name: keystore-secret-bootstrap-es
-  namespace: manufacturing-dev
-spec:
-  refreshInterval: 15s
-  secretStoreRef:
-    name: {{ .Values.global.secretStore.name }}
-    kind: {{ .Values.global.secretStore.kind }}
-  target:
-    name: keystore-secret-bootstrap-prova
-    template:
-      type: Opaque
-      data:
-        password: {{ "{{ .keystorepassword }}" }}
-  data:
-  - secretKey: keystorepassword
-    remoteRef:
-      key: secret/data/hub/plant-manager-certificate
-      property: password
----
+# We first will need to configure the vault properly for this to work
+# apiVersion: "external-secrets.io/v1beta1"
+# kind: ExternalSecret
+# metadata:
+#   name: keystore-secret-bootstrap-es
+#   namespace: manufacturing-dev
+# spec:
+#   refreshInterval: 15s
+#   secretStoreRef:
+#     name: {{ .Values.global.secretStore.name }}
+#     kind: {{ .Values.global.secretStore.kind }}
+#   target:
+#     name: keystore-secret-bootstrap-prova
+#     template:
+#       type: Opaque
+#       data:
+#         password: {{ "{{ .keystorepassword }}" }}
+#   data:
+#   - secretKey: keystorepassword
+#     remoteRef:
+#       key: secret/data/hub/plant-manager-certificate
+#       property: password
+# ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
