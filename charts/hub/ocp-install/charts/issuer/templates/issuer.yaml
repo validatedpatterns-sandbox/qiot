@@ -27,5 +27,5 @@ spec:
         role: {{ .Release.Namespace }}-{{ .Values.baseDomain }}
         mountPath: /v1/auth/kubernetes
         secretRef:
+          name: registration-service-secret
           key: token
-          name: vault
