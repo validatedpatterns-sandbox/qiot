@@ -1,6 +1,9 @@
 # Hashicorp Vault Helm Chart
 global:
   tlsDisable: false
+  secretStore:
+    name: vault-backend
+    kind: ClusterSecretStore
 
 vault:
   ui:

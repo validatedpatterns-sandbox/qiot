@@ -15,8 +15,8 @@ metadata:
 spec:
   refreshInterval: 15s
   secretStoreRef:
-    name: {{ .Values.secretStore.name }}
-    kind: {{ .Values.secretStore.kind }}
+    name: {{ .Values.global.secretStore.name }}
+    kind: {{ .Values.global.secretStore.kind }}
   target:
     name: keystore-secret-bootstrap-prova
     template:
