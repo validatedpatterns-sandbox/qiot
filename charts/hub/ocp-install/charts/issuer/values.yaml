@@ -4,6 +4,11 @@
 
 baseDomain: qiot-project.io
 wildcardDomain: ""
+oc:
+  image:
+    repository: quay.io/openshift/origin-cli
+    pullPolicy: IfNotPresent
+    tag: 4.10
 
 issuer:
   vault:
