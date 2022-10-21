@@ -140,10 +140,10 @@ clusterGroup:
         - patch
         - update
 
+    schedule: "*/3 * * * *"
     jobs:
     - name: openshift-service-ca-secret
       playbook: ansible/playbooks/copy-service-ca-crt-to-secret.yml
-      schedule: "*/3 * * * *"
 
   managedClusterGroups:
     exampleRegion:
