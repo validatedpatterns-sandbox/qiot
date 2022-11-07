@@ -92,3 +92,20 @@ spec:
             bound_service_account_names=${SERVICE_ACCOUNT} bound_service_account_namespaces="${PROJECT}" \
             policies=pki-${ROLE}-policy \
             ttl=2h
+
+          cat > policy.hcl << EOF
+            path "sys/mounts/{{ .Release.Namespace }}-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+
+            path "/{{ .Release.Namespace }}-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+          EOF
+
+          vault policy write -tls-skip-verify registration-{{ .Release.Namespace }}-admin ./policy.hcl
+
+          vault write -tls-skip-verify auth/kubernetes/role/{{ .Release.Namespace }}-reg-policy \
+            bound_service_account_names=registration-service \
+            bound_service_account_namespaces={{ .Release.Namespace }} \
+            policies=registration-{{ .Release.Namespace }}-admin ttl=1h
