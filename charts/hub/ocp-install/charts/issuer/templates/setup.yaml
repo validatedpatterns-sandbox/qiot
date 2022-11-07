@@ -93,7 +93,7 @@ spec:
             policies=pki-${ROLE}-policy \
             ttl=2h
 
-          cat > policy.hcl << EOF
+          cat > /tmp/policy.hcl << EOF
             path "sys/mounts/{{ .Release.Namespace }}-pki-*" {
               capabilities = ["create", "read", "update", "delete", "list"]
             }
@@ -103,7 +103,7 @@ spec:
             }
           EOF
 
-          vault policy write -tls-skip-verify registration-{{ .Release.Namespace }}-admin ./policy.hcl
+          vault policy write -tls-skip-verify registration-{{ .Release.Namespace }}-admin /tmp/policy.hcl
 
           vault write -tls-skip-verify auth/kubernetes/role/{{ .Release.Namespace }}-reg-policy \
             bound_service_account_names=registration-service \
