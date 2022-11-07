@@ -1,8 +1,0 @@
-apiVersion: v2
-name: cert-manager-1-10
-description: A Helm chart to install cert-manager 1.10 until it shows up in the community operators
-version: 0.0.1
-dependencies:
-  - name: cert-manager
-    version: "1.10.0"
-    repository: "https://charts.jetstack.io"
