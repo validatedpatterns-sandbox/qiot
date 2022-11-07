@@ -67,18 +67,18 @@ clusterGroup:
       channel: amq-streams-1.8.x
       csv: amqstreams.v1.8.4
 
-    # cert-manager-dev:
-    #   name: cert-manager
-    #   channel: stable
-    #   source: community-operators
-    #   csv: cert-manager.v1.9.1
+  cert-manager-dev:
+    name: cert-manager
+    channel: stable
+    source: community-operators
+    csv: cert-manager.v1.10.1
 
   applications:
-    cert-manager-1-10:
-      name: cert-manager-1-10
-      namespace: cert-manager
-      project: hub
-      path: charts/hub/cert-manager-1-10
+    # cert-manager-1-10:
+    #   name: cert-manager-1-10
+    #   namespace: cert-manager
+    #   project: hub
+    #   path: charts/hub/cert-manager-1-10
 
     vault:
       name: vault
