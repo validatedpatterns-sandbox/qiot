@@ -41,8 +41,12 @@ vault:
 
     service:
       enabled: true
-      annotations:
-        service.beta.openshift.io/serving-cert-secret-name: vault-secret
+      noninternal:
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: vault-secret
+      internal:
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: vault-secret-internal
 
 clusterGroup:
   name: hub
