@@ -18,8 +18,7 @@ metadata:
 spec:
   vault:
     path: {{ .Release.Namespace }}-pki/sign/{{ .Values.baseDomain }} 
-    #server: {{ .Values.issuer.vault.server }}
-    server: https://vault-internal.vault.svc.cluster.local:8200
+    server: {{ .Values.issuer.vault.server }}
     caBundleSecretRef:
       name: openshift-service-ca.crt
       key: caBundle
