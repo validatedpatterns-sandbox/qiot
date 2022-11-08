@@ -24,7 +24,8 @@ spec:
       key: caBundle
     auth:
       kubernetes:
-        role: {{ .Release.Namespace }}-{{ .Values.baseDomain }}
+        #role: {{ .Release.Namespace }}-{{ .Values.baseDomain }}
+        role: manufacturing-dev-reg-policy
         mountPath: /v1/auth/kubernetes
         secretRef:
           name: registration-service-secret
