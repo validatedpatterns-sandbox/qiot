@@ -50,11 +50,11 @@ clusterGroup:
       project: hub
       path: common/golang-external-secrets
 
-    vault-bootstrap:
-      name: vault-bootstrap
-      namespace: vault
-      project: hub
-      path: charts/hub/vault-bootstrap
+    # vault-bootstrap:
+    #   name: vault-bootstrap
+    #   namespace: vault
+    #   project: hub
+    #   path: charts/hub/vault-bootstrap
 
     ocp-install:
       name: ocp-install
