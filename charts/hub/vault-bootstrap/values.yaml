@@ -13,12 +13,12 @@ serviceAccount:
   name: ""
   
 vault:
-  init: True
-  auth: True
+  init: false
+  auth: false
   serviceAccount:
     name: vault
   schema: https
   port: 8200
   image:
     repository: "registry.connect.redhat.com/hashicorp/vault"
-    tag: "1.11.3-ubi"
+    tag: "1.12.1-ubi"
