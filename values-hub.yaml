@@ -20,6 +20,7 @@ clusterGroup:
   - golang-external-secrets
   - cert-manager
   - manufacturing-dev
+  - open-cluster-management
 
   projects:
   - hub
@@ -37,7 +38,23 @@ clusterGroup:
       source: community-operators
       csv: cert-manager.v1.10.1
 
+    acm:
+      name: advanced-cluster-management
+      namespace: open-cluster-management
+      channel: release-2.6
+
   applications:
+    acm:
+      name: acm
+      namespace: open-cluster-management
+      project: hub
+      path: common/acm
+      ignoreDifferences:
+      - group: internal.open-cluster-management.io
+        kind: ManagedClusterInfo
+        jsonPointers:
+          - /spec/loggingCA
+
     vault:
       name: vault
       namespace: vault
@@ -49,12 +66,6 @@ clusterGroup:
       namespace: golang-external-secrets
       project: hub
       path: common/golang-external-secrets
-
-    # vault-bootstrap:
-    #   name: vault-bootstrap
-    #   namespace: vault
-    #   project: hub
-    #   path: charts/hub/vault-bootstrap
 
     ocp-install:
       name: ocp-install
