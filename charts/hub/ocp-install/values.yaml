@@ -1,5 +1,9 @@
 name: manufacturing-datacenter-install
 
+secretStore:
+  name: vault-backend
+  kind: ClusterSecretStore
+
 ########## mongo ##########
 mongo:
   path: "/var/hpvolumes/mongodb"
