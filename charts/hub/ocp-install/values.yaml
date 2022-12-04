@@ -7,7 +7,7 @@ secretStore:
 ########## mongo ##########
 mongo:
   path: "/var/hpvolumes/mongodb"
-  vault_keypath: "/secret/hub/mongodb"
+  vault_keypath: "secret/data/hub/mongodb"
   storageCapacity: 5Gi
   MONGO_INITDB_ROOT_USERNAME: qiotroot
   MONGODB_DATABASE: qiot_manufacturing
