@@ -1,0 +1,974 @@
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-sa.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: mongodb
+---
+# Source: manufacturing-datacenter-install/templates/postgresql/postgresql-sa.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: postgresql
+---
+# Source: manufacturing-datacenter-install/charts/influxdb2/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/name: influxdb2
+    helm.sh/chart: influxdb2-2.0.1
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "2.0.6"
+    app.kubernetes.io/managed-by: Helm
+  name: hub-ocp-install-influxdb2-auth
+data:
+  admin-token: "cWlvdG1hbnVmYWN0dXJpbmdpbmZsdXhkYnRva2Vu"
+  admin-password: "cWlvdG1hbnVmYWN0dXJpbmdwYXNzd29yZA=="
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/issuer.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registration-service-secret
+  annotations:
+    kubernetes.io/service-account.name: registration-service
+type: kubernetes.io/service-account-token
+---
+# Source: manufacturing-datacenter-install/charts/influxdb2/templates/persistent-volume-claim.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: "hub-ocp-install-influxdb2"
+  labels:
+    app.kubernetes.io/name: influxdb2
+    helm.sh/chart: influxdb2-2.0.1
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "2.0.6"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    helm.sh/resource-policy: "keep"
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "100Gi"
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Source: manufacturing-datacenter-install/templates/postgresql/postgresql-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-rb.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mongo-privileged
+subjects:
+  - kind: ServiceAccount
+    name: mongodb
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:openshift:scc:privileged'
+---
+# Source: manufacturing-datacenter-install/charts/influxdb2/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hub-ocp-install-influxdb2
+  labels:
+    app.kubernetes.io/name: influxdb2
+    helm.sh/chart: influxdb2-2.0.1
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "2.0.6"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8086
+
+  selector:
+    app.kubernetes.io/name: influxdb2
+    app.kubernetes.io/instance: hub-ocp-install
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  ports:
+    - name: 27017-tcp
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+    deploymentconfig: mongodb
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+---
+# Source: manufacturing-datacenter-install/templates/postgresql/postgresql-service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgresql
+spec:
+  ports:
+    - name: postgresql
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgresql
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb
+        deploymentconfig: mongodb
+    spec:
+      restartPolicy: Always
+      serviceAccountName: mongodb
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsUser: 0
+      containers:
+        - resources:
+            limits:
+              cpu: 500m
+              memory: 2Gi
+          terminationMessagePath: /dev/termination-log
+          name: mongodb
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: mongodb-1
+              mountPath: /var/lib/mongodb/data
+          terminationMessagePolicy: File
+          envFrom:
+            - secretRef:
+                name: mongodb
+          image: >-
+            registry.redhat.io/rhscl/mongodb-36-rhel7:latest
+      serviceAccount: mongodb
+      volumes:
+        - name: mongodb-1
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+# Source: manufacturing-datacenter-install/templates/postgresql/postgresql-deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: postgresql
+  labels:
+    app: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        deploymentconfig: postgresql
+    spec:
+      restartPolicy: Always
+      serviceAccountName: postgresql
+      terminationGracePeriodSeconds: 30
+      containers:
+        - resources: {}
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - '--live'
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: postgresql-data
+              mountPath: /var/lib/pgsql/data
+          terminationMessagePolicy: File
+          envFrom:
+            - secretRef:
+                name: postgresql
+          image: >-
+            registry.redhat.io/rhel8/postgresql-13:latest
+      serviceAccount: postgresql
+      volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: postgresql-pvc
+  strategy:
+    type: Recreate
+---
+# Source: manufacturing-datacenter-install/charts/influxdb2/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: hub-ocp-install-influxdb2
+  labels:
+    
+    app.kubernetes.io/name: influxdb2
+    helm.sh/chart: influxdb2-2.0.1
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "2.0.6"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: influxdb2
+      app.kubernetes.io/instance: hub-ocp-install
+  serviceName: "hub-ocp-install-influxdb2"
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: influxdb2
+        app.kubernetes.io/instance: hub-ocp-install
+      annotations:
+        {}
+    spec:
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: data
+          persistentVolumeClaim:
+            claimName: hub-ocp-install-influxdb2
+      containers:
+        - name: influxdb2
+          image: "influxdb:2.0.6-alpine"
+          imagePullPolicy: IfNotPresent
+          args:
+            - influxd
+            - --engine-path
+            - /var/lib/data/influxdb2
+            - --bolt-path
+            - /var/lib/data/influxd.bolt
+          ports:
+            - name: http
+              containerPort: 8086
+              protocol: TCP
+          env:
+            # Automated setup will not run if an existing boltdb file is found at the configured path.
+            # This behavior allows for the InfluxDB container to reboot post-setup without encountering "DB is already set up" errors.
+            - name: DOCKER_INFLUXDB_INIT_MODE
+              value: setup
+            # The username to set for the system's initial super-user (Required).
+            - name: DOCKER_INFLUXDB_INIT_USERNAME
+              value: qiotmanufacturing
+            # The password to set for the system's inital super-user (Required).
+            - name: DOCKER_INFLUXDB_INIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hub-ocp-install-influxdb2-auth
+                  key: admin-password
+            # The name to set for the system's initial organization (Required).
+            - name: DOCKER_INFLUXDB_INIT_ORG
+              value: qiot
+            # The name to set for the system's initial bucket (Required).
+            - name: DOCKER_INFLUXDB_INIT_BUCKET
+              value: manufacturing
+            # The duration the system's initial bucket should retain data. If not set, the initial bucket will retain data forever.
+            - name: DOCKER_INFLUXDB_INIT_RETENTION
+              value: 0s
+            # The authentication token to associate with the system's initial super-user. If not set, a token will be auto-generated by the system.
+            - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hub-ocp-install-influxdb2-auth
+                  key: admin-token
+
+            # Path to the BoltDB database.
+            - name: INFLUXD_BOLT_PATH
+              value: /var/lib/data/influxd.bolt
+            # Path to persistent storage engine files where InfluxDB stores all Time-Structure Merge Tree (TSM) data on disk.
+            - name: INFLUXD_ENGINE_PATH
+              value: /var/lib/data
+
+            # Extra environment variables from .Values.env
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          volumeMounts:
+          - name: data
+            mountPath: /var/lib/data
+          - name: config
+            mountPath: /etc/influxdb2
+          resources:
+            {}
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/cleanup.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-issuer-cleanup
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: vault
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "hub-ocp-install"
+      labels:
+        app.kubernetes.io/name: issuer
+        app.kubernetes.io/instance: hub-ocp-install
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cleanup
+        envFrom:
+        - secretRef:
+            name: vault-bootstrap
+        image: registry.connect.redhat.com/hashicorp/vault:1.11.3-ubi
+        env:
+        - name: VAULT_ADDR
+          value: https://vault.vault.svc.cluster.local:8200
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+
+          if [ "$#" -ne 1 ]; then
+              echo "Missing Projects"
+          fi
+
+          export BASE_DOMAIN=qiot-project.io
+          export PROJECT=default
+          export PKI=${PROJECT}-pki
+          export DOMAIN=${PROJECT}.$BASE_DOMAIN
+          export ROLE=${PROJECT}-$BASE_DOMAIN
+          # In future create a dedicate SA during project provision
+          export SERVICE_ACCOUNT=default
+          export WILDCARD_DOMAIN=
+
+          echo "Cleanup on ${PROJECT}"
+
+          echo "Disable PKI Engine ${PKI}"
+
+          vault secrets disable -tls-skip-verify --path=${PKI}
+
+          vault delete --tls-skip-verify auth/kubernetes/role/${ROLE}
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/setup.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-issuer-setup
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: vault
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "hub-ocp-install"
+      labels:
+        app.kubernetes.io/name: issuer
+        app.kubernetes.io/instance: hub-ocp-install
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: policy
+        envFrom:
+        - secretRef:
+            name: vault-bootstrap
+        image: registry.connect.redhat.com/hashicorp/vault:1.11.3-ubi
+        env:
+        - name: VAULT_ADDR
+          value: https://vault.vault.svc.cluster.local:8200
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+
+          if [ "$#" -ne 1 ]; then
+              echo "Missing Projects"
+          fi
+
+          export BASE_DOMAIN=qiot-project.io
+          export PROJECT=default
+          export PKI=${PROJECT}-pki
+          export DOMAIN=${PROJECT}.$BASE_DOMAIN
+          export ROLE=${PROJECT}-$BASE_DOMAIN
+          # In future create a dedicate SA during project provision
+          export SERVICE_ACCOUNT=default
+          export WILDCARD_DOMAIN=
+
+          echo "Setup on ${PROJECT}"
+
+          echo "Enable PKI Engine ${PKI}"
+
+          vault secrets enable -tls-skip-verify -path=${PKI} -description="$PROJECT - Root CA" pki
+          # 1 Year
+          vault secrets tune -tls-skip-verify -max-lease-ttl=8760h ${PKI}
+
+          vault write -tls-skip-verify ${PKI}/root/generate/internal \
+              common_name=${DOMAIN} \
+              ttl=8760h
+
+          echo "CRL Configuration"
+
+          vault write -tls-skip-verify ${PKI}/config/urls \
+              issuing_certificates="$VAULT_ADDR/v1/${PKI}/ca" \
+              crl_distribution_points="$VAULT_ADDR/v1/${PKI}/crl"
+
+          echo "$VAULT_ADDR/v1/${PKI}/ca"
+          echo "$VAULT_ADDR/v1/${PKI}/crl"
+
+          echo "Configure Role for domain: ${DOMAIN}"
+
+          vault write -tls-skip-verify ${PKI}/roles/${BASE_DOMAIN} \
+              allowed_domains=${DOMAIN},${PROJECT}.svc,${WILDCARD_DOMAIN} \
+              allow_subdomains=true \
+              allowed_other_sans="*" \
+              allow_glob_domains=true \
+              allowed_uri_sans=*-${PROJECT}.${WILDCARD_DOMAIN} \
+              max_ttl="31536000"
+
+          echo "Create PKI Policy pki-${ROLE}-policy"
+
+          vault policy write --tls-skip-verify pki-${ROLE}-policy - <<EOF
+          path "${PKI}*"                               { capabilities = ["read", "list"] }
+          path "${PKI}/roles/${BASE_DOMAIN}"   { capabilities = ["create", "update"] }
+          path "${PKI}/sign/${BASE_DOMAIN}"    { capabilities = ["create", "update"] }
+          path "${PKI}/issue/${BASE_DOMAIN}"   { capabilities = ["create"] }
+          EOF
+
+          echo "Authorize ServiceAccount ${SERVICE_ACCOUNT} on ${PROJECT}"
+
+          vault write --tls-skip-verify auth/kubernetes/role/${ROLE} \
+            bound_service_account_names=${SERVICE_ACCOUNT} bound_service_account_namespaces="${PROJECT}" \
+            policies=pki-${ROLE}-policy \
+            ttl=2h
+
+          cat > /tmp/policy.hcl << EOF
+            path "sys/mounts/default-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+
+            path "/default-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+          EOF
+
+          vault policy write -tls-skip-verify registration-default-admin /tmp/policy.hcl
+
+          vault write -tls-skip-verify auth/kubernetes/role/default-reg-policy \
+            bound_service_account_names=registration-service \
+            bound_service_account_namespaces=default \
+            policies=registration-default-admin ttl=1h
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/waitforsecret.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-issuer-wait-for-secret
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: default
+spec:
+  template:
+    spec:
+      serviceAccountName: registration-service
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: quay.io/openshift/origin-cli:4.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          while ! kubectl get secret openshift-service-ca.crt --namespace default; do
+            echo "Waiting for my secret. CTRL-C to exit."; sleep 1
+          done
+        name: wait-for-openshift-service-ca-secret
+      dnsPolicy: ClusterFirst
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/issuer.yaml
+# Force a token for the vault user so we can use its name in the vault issuer template
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hub-ocp-install-issuer-dummy
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  commonName: dummy.default.qiot-project.io 
+  dnsNames:
+    - dummy.default.qiot-project.io 
+  secretName: hub-ocp-install-issuer-dummy-cert
+  issuerRef:
+    name: hub-ocp-install-issuer-vault
+---
+# Source: manufacturing-datacenter-install/templates/mongo/mongo-external-secret.yaml
+apiVersion: "external-secrets.io/v1beta1"
+kind: ExternalSecret
+metadata:
+  name: mongodb-es
+spec:
+  refreshInterval: 15s
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: mongodb
+    template:
+      type: Opaque
+      data:
+        MONGO_INITDB_ROOT_USERNAME: qiotroot
+        MONGODB_USER: qiotmanufacturing
+        MONGODB_DATABASE: qiot_manufacturing
+        MONGO_INITDB_ROOT_PASSWORD: "{{ .mongo_initdb_root_password | toString }}"
+        MONGODB_ADMIN_PASSWORD: "{{ .mongodb_admin_password | toString }}"
+        MONGODB_PASSWORD: "{{ .mongodb_password | toString }}"
+  data:
+  - secretKey: mongo_initdb_root_password
+    remoteRef:
+      key: secret/data/hub/mongodb
+      property: mongo_initdb_root_password
+  - secretKey: mongodb_admin_password
+    remoteRef:
+      key: secret/data/hub/mongodb
+      property: mongodb_admin_password
+  - secretKey: mongodb_password
+    remoteRef:
+      key: secret/data/hub/mongodb
+      property: mongodb_password
+---
+# Source: manufacturing-datacenter-install/templates/postgresql/postgresql-external-secret.yaml
+apiVersion: "external-secrets.io/v1beta1"
+kind: ExternalSecret
+metadata:
+  name: postgresql-es
+spec:
+  refreshInterval: 60s
+  secretStoreRef:
+    name: vault-backend
+    kind: ClusterSecretStore
+  target:
+    name: postgresql
+    template:
+      type: Opaque
+      data:
+        POSTGRESQL_DATABASE: qiot_manufacturing
+        POSTGRESQL_USER: qiotmanufacturing
+        POSTGRESQL_PASSWORD: "{{ .postgresql_password | toString }}"
+  data:
+  - secretKey: postgresql_password
+    remoteRef:
+      key: secret/data/hub/postgresql
+      property: postgresql_password
+---
+# Source: manufacturing-datacenter-install/charts/issuer/templates/issuer.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: hub-ocp-install-issuer-vault
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  vault:
+    path: default-pki/sign/qiot-project.io 
+    server: https://vault.vault.svc.cluster.local:8200
+    caBundleSecretRef:
+      name: openshift-service-ca.crt
+      key: caBundle
+    auth:
+      kubernetes:
+        #role: default-qiot-project.io
+        role: manufacturing-dev-reg-policy
+        mountPath: /v1/auth/kubernetes
+        secretRef:
+          name: registration-service-secret
+          key: token
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/kafka.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: stream-service
+spec:
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+  kafka:
+    authorization:
+      type: simple
+    config:
+      inter.broker.protocol.version: '2.8'
+      log.message.format.version: '2.8'
+      offsets.topic.replication.factor: 3
+      transaction.state.log.min.isr: 2
+      transaction.state.log.replication.factor: 3
+    listeners:
+      - name: plain
+        port: 9092
+        tls: false
+        type: internal
+      - name: tls
+        port: 9093
+        tls: true
+        type: internal
+      - authentication:
+          type: scram-sha-512
+        name: external
+        port: 9094
+        tls: true
+        type: route
+    replicas: 3
+    storage:
+      type: persistent-claim
+      size: 100Gi
+      deleteClaim: false
+    version: 2.8.0
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/topic-machinerysubscription.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: machinerysubscription
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/topic-productline.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: productline
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/topic-telemetryproduction.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: telemetryproduction
+spec:
+  config:
+    retention.ms: 604800000
+    segment.bytes: 1073741824
+  partitions: 10
+  replicas: 3
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-productline-consumer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: productline-consumer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Read
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: productline
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Read
+        resource:
+          name: product-line
+          patternType: prefix
+          type: group
+        type: allow
+    type: simple
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-productline-producer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: productline-producer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Write
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: productline
+          patternType: literal
+          type: topic
+        type: allow
+    type: simple
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-subscription-consumer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: subscription-consumer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Read
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Read
+        resource:
+          name: plant-manager
+          patternType: literal
+          type: group
+        type: allow
+    type: simple
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-subscription-producer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: subscription-producer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Write
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: machinerysubscription
+          patternType: literal
+          type: topic
+        type: allow
+    type: simple
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-telemetry-consumer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: telemetry-consumer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Read
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Read
+        resource:
+          name: event-collector
+          patternType: prefix
+          type: group
+        type: allow
+    type: simple
+---
+# Source: manufacturing-datacenter-install/templates/amq-streams/user-telemetry-producer.yaml
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    strimzi.io/cluster: stream-service
+  name: telemetry-producer
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    acls:
+      - host: '*'
+        operation: Write
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+      - host: '*'
+        operation: Describe
+        resource:
+          name: telemetry
+          patternType: prefix
+          type: topic
+        type: allow
+    type: simple
