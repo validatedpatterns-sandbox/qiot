@@ -8,52 +8,12 @@ global:
 cert-manager:
   installCRDs: true
 
-vault:
-  ui:
-    enabled: true
-
-  server:
-    route:
-      tls:
-        termination: "passthrough"
-
-    extraEnvironmentVars:
-      VAULT_CAPATH: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
-      VAULT_ADDR: https://vault.vault.svc.cluster.local:8200
-
-    standalone:
-      enabled: true
-      config: |
-        ui = true
-        listener "tcp" {
-          address = "[::]:8200"
-          cluster_address = "[::]:8201"
-          tls_cert_file = "/vault/userconfig/vault-secret/tls.crt"
-          tls_key_file = "/vault/userconfig/vault-secret/tls.key"
-        }
-        storage "file" {
-          path = "/vault/data"
-        }
-
-    extraVolumes:
-    - type: secret
-      name: vault-secret
-
-    service:
-      enabled: true
-      noninternal:
-        annotations:
-          service.beta.openshift.io/serving-cert-secret-name: vault-secret
-      internal:
-        annotations:
-          service.beta.openshift.io/serving-cert-secret-name: vault-secret-internal
-
 clusterGroup:
   name: hub
   isHubCluster: true
   # Note: setting this to true stores the vault unseal keys inside a cluster secret and
   # is fundamentally insecure
-  insecureUnsealVaultInsideCluster: false
+  insecureUnsealVaultInsideCluster: true
 
   namespaces:
   - vault
@@ -78,12 +38,6 @@ clusterGroup:
       csv: cert-manager.v1.10.1
 
   applications:
-    # cert-manager-1-10:
-    #   name: cert-manager-1-10
-    #   namespace: cert-manager
-    #   project: hub
-    #   path: charts/hub/cert-manager-1-10
-
     vault:
       name: vault
       namespace: vault
