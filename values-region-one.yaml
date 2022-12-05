@@ -13,11 +13,10 @@ clusterGroup:
   - factory
 
   subscriptions:
-    amqstreams-dev:
-      name: amq-streams
+    amq-broker:
+      name: amq-broker-rhel8
       namespace: factory
-      channel: amq-streams-1.8.x
-      csv: amqstreams.v1.8.4
+      channel: 7.10.x
 
     cert-manager-dev:
       name: cert-manager
