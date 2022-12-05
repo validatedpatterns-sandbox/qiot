@@ -1,0 +1,39 @@
+name: manufacturing-comp-factory-sno-install
+certificate:
+  baseDomain: qiot-project.io
+  wildcardDomain: "manufacturingfacility.qiot.io"
+amqbroker:
+  size: 1
+  brokerName: broker-service
+  adminPassword: qiotmanufacturingpassword
+  adminUser: qiotmanufacturing
+  path: "/var/hpvolumes/amqbroker"
+  storageCapacity: 5Gi
+mongo:
+  path: "/var/hpvolumes/mongodb"
+  storageCapacity: 5Gi
+  MONGO_INITDB_ROOT_USERNAME: qiotroot
+  MONGO_INITDB_ROOT_PASSWORD: qiotrootpassword
+  MONGODB_ADMIN_PASSWORD: qiotrootpassword
+  MONGODB_DATABASE: qiot_manufacturing
+  MONGODB_PASSWORD: qiotmanufacturingpassword
+  MONGODB_USER: qiotmanufacturing
+postgresql:
+  path: "/var/hpvolumes/postgresql"
+  storageCapacity: 5Gi
+  POSTGRESQL_DATABASE: qiot_manufacturing
+  POSTGRESQL_PASSWORD: qiotmanufacturingpassword
+  POSTGRESQL_USER: qiotmanufacturing
+    
+oc:
+  image:
+    repository: quay.io/openshift/origin-cli
+    pullPolicy: IfNotPresent
+    tag: 4.8
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""

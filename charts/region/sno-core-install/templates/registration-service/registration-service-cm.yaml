@@ -1,0 +1,9 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.kubernetes-client.namespace={{ .Release.Namespace }}
+    qiot.cert-manager.issuer=factory
+kind: ConfigMap
+metadata:
+  name: registration-service

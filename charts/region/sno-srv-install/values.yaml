@@ -1,0 +1,10 @@
+name: manufacturing-srv-factory-sno-install
+certificate:
+  baseDomain: qiot-project.io
+  wildcardDomain: "manufacturingfacility.qiot.io"
+facilitymanagerservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="subscription-producer" password="nV167Hh2C6Sd";'
+productionvalidatorservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="telemetry-producer" password="IXROfcbJbHbD";'
+productlineservice:
+  sasl: 'org.apache.kafka.common.security.scram.ScramLoginModule required username="productline-consumer" password="UjlcgBjcs4fP";'

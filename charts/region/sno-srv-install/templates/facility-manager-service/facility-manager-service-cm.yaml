@@ -1,0 +1,28 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.ssl.native=true
+    quarkus.http.ssl-port=8443
+    quarkus.http.ssl.certificate.key-store-file=/cert/keystore.p12
+    quarkus.http.ssl.certificate.key-store-password=password
+    quarkus.http.insecure-requests=enabled
+    plant-manager-api/mp-rest/url=https://plant-manager-service-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com
+    plant-manager-api/mp-rest/trustStore=/certbootstrap/bootstrap.ts
+    plant-manager-api/mp-rest/trustStorePassword=password
+    registration-service-api/mp-rest/url=http://registration-service:8080
+    quarkus.datasource.jdbc.url=jdbc:postgresql://postgresql:5432/qiot_manufacturing
+    quarkus.kubernetes-client.namespace={{ .Release.Namespace }}
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com:443
+    kafka.ssl.truststore.location=/var/data/qiot/factory/data/streamservice.ts
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_SSL
+    kafka.sasl.jaas.config={{ .Values.facilitymanagerservice.sasl }}
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.outgoing.machinerysubscription.connector=smallrye-kafka
+    mp.messaging.outgoing.machinerysubscription.topic=machinerysubscription
+    mp.messaging.outgoing.machinerysubscription.value.serializer=io.qiot.manufacturing.datacenter.commons.util.serializer.MachinerySubscriptionRequestSerializer
+kind: ConfigMap
+metadata:
+  name: facility-manager-service

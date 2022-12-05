@@ -1,0 +1,25 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.artemis.url=tcp://broker-service-hdls-svc:61616
+    quarkus.mongodb.connection-string=mongodb://mongodb:27017
+    quarkus.mongodb.database=qiot_manufacturing
+    quarkus.mongodb.credentials.username=qiotmanufacturing
+    quarkus.mongodb.credentials.password=qiotmanufacturingpassword
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com:443
+    kafka.ssl.truststore.location=/var/data/qiot/factory/data/streamservice.ts
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_SSL
+    kafka.sasl.jaas.config={{ .Values.productlineservice.sasl }}
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.incoming.productline.connector=smallrye-kafka
+    mp.messaging.incoming.productline.topic=productline
+    mp.messaging.incoming.productline.auto-generated-client-id=true
+    mp.messaging.incoming.productline.auto.offset.reset=latest
+    mp.messaging.incoming.productline.group.id=product-line
+    mp.messaging.incoming.productline.failure-strategy=ignore
+kind: ConfigMap
+metadata:
+  name: product-line-service

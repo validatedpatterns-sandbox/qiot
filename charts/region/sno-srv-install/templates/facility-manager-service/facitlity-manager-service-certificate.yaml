@@ -1,0 +1,30 @@
+---
+apiVersion: v1
+data:
+  PASSWORD: cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  name: keystore-facility-manager-service
+type: Opaque
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: facility-manager-service
+  labels:
+    cert-manager.io/certificate-name: facility-manager-service
+spec:
+  commonName: facility-manager-service.{{ .Release.Namespace }}.svc
+  dnsNames:
+    - facility-manager-service.{{ .Release.Namespace }}.svc
+    - facility-manager-service.{{ .Release.Namespace }}.{{ .Values.certificate.baseDomain }}
+    - facility-manager-service-{{ .Release.Namespace }}.{{ .Values.certificate.wildcardDomain }}
+  issuerRef:
+    name: factory
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: PASSWORD
+        name: keystore-facility-manager-service
+  secretName: facility-manager-service-secret

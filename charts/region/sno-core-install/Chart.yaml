@@ -1,0 +1,6 @@
+apiVersion: v2
+name: manufacturing-core-factory-sno-install
+description: Helm chart to deploy factory core to SNO
+type: application
+version: 0.0.1
+appVersion: "1.0.0"

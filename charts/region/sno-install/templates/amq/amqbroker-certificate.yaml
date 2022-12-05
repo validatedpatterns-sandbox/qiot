@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+data:
+  PASSWORD: cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  name: keystore-endpoint-service-edge
+type: Opaque
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: endpoint-service-edge
+  labels:
+    cert-manager.io/certificate-name: endpoint-service-edge
+spec:
+  commonName: {{ .Values.amqbroker.brokerName }}-edge-0-svc.{{ .Release.Namespace }}.svc
+  dnsNames:
+    - {{ .Values.amqbroker.brokerName }}-edge-0-svc.{{ .Release.Namespace }}.svc
+    - {{ .Values.amqbroker.brokerName }}-edge-0-svc-rte.{{ .Release.Namespace }}.{{ .Values.certificate.baseDomain }}
+    - {{ .Values.amqbroker.brokerName }}-edge-0-svc-rte-{{ .Release.Namespace }}.{{ .Values.certificate.wildcardDomain }}
+  issuerRef:
+    name: factory
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: PASSWORD
+        name: keystore-endpoint-service-edge
+#    jks:
+#      create: true
+#      passwordSecretRef:
+#        key: PASSWORD
+#        name: keystore-endpoint-service-edge
+  secretName: endpoint-service-edge-secret

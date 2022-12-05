@@ -9,20 +9,49 @@ clusterGroup:
   isHubCluster: false
 
   namespaces:
-    - config-demo
+  - cert-manager
+  - factory
 
   subscriptions:
+    amqstreams-dev:
+      name: amq-streams
+      namespace: manufacturing-dev
+      channel: amq-streams-1.8.x
+      csv: amqstreams.v1.8.4
+
+    cert-manager-dev:
+      name: cert-manager
+      channel: stable
+      source: community-operators
+      csv: cert-manager.v1.10.1
 
   projects:
-    - config-demo
+  - factory
 
   applications:
-    config-demo:
-      name: config-demo
-      namespace: config-demo
-      project: config-demo
-      path: charts/all/config-demo
+    sno-volumes-install:
+      name: sno-volumes-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-volumes-install
 
+    sno-core-install:
+      name: sno-core-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-core-install
+
+    sno-install:
+      name: sno-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-install
+
+    sno-srv-install:
+      name: sno-srv-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-srv-install
 
   imperative:
     # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm

@@ -1,0 +1,16 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: production-validator-service
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/qiotmanufacturing/factory-production-validator
+    generation: 2
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Local

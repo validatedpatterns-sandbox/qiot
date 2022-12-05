@@ -1,0 +1,64 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  name: 50-set-selinux-for-hostpath-volumes-sno
+  labels:
+    machineconfiguration.openshift.io/role: master
+spec:
+  config:
+    ignition:
+      version: 2.2.0
+    systemd:
+      units:
+        - name: hostpath-amqbroker.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Create directory for A-MQ
+            Before=kubelet.service
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStartPre=mkdir -p {{ .Values.amqbroker.path }}
+            ExecStart=chown core:core {{ .Values.amqbroker.path }}
+            [Install]
+            WantedBy=multi-user.target
+        - name: hostpath-mongodb.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Create directory for mongodb
+            Before=kubelet.service
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStartPre=mkdir -p {{ .Values.mongo.path }}
+            ExecStart=chown core:core {{ .Values.mongo.path }}
+            [Install]
+            WantedBy=multi-user.target
+        - name: hostpath-postgresql.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Create directory for PostgreSQL
+            Before=kubelet.service
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStartPre=mkdir -p {{ .Values.postgresql.path }} 
+            ExecStart=chown core:core {{ .Values.postgresql.path }} 
+            [Install]
+            WantedBy=multi-user.target
+        - name: hostpath-provisioner.service
+          enabled: true
+          contents: |
+            [Unit]
+            Description=Set SELinux chcon for hostpath provisioner
+            Before=kubelet.service
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStartPre=mkdir -p /var/hpvolumes
+            ExecStart=/usr/bin/chcon -Rt container_file_t /var/hpvolumes
+            [Install]
+            WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+name: manufacturing-comp-factory-sno-volumes-install
+amqbroker:
+  path: "/var/hpvolumes/amqbroker"
+  storageCapacity: 5Gi
+mongo:
+  path: "/var/hpvolumes/mongodb"
+  storageCapacity: 5Gi
+postgresql:
+  path: "/var/hpvolumes/postgresql"
+  storageCapacity: 5Gi

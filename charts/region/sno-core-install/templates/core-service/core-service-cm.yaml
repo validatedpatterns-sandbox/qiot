@@ -1,0 +1,15 @@
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    qiot.factory.serial={{ .Values.coreservice.serial }}
+    qiot.factory.name={{ .Values.coreservice.name }}
+    qiot.certstore.password=password
+    plant-manager-api/mp-rest/url=https://plant-manager-service-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com
+    plant-manager-api/mp-rest/trustStore=/cert/bootstrap.ts
+    plant-manager-api/mp-rest/trustStorePassword=password
+    registration-service-api/mp-rest/url=http://registration-service:8080
+    quarkus.kubernetes-client.namespace={{ .Release.Namespace }}
+kind: ConfigMap
+metadata:
+  name: core-service
