@@ -1,0 +1,6 @@
+1. charts/hub/ocp-install/charts/issuer/templates/setup.yaml needs to be rewritten into an ansible cronjob
+
+It needs to loop over each imported cluster in ACM and configure the corresponding vault backend accordingly
+
+2. 
+
