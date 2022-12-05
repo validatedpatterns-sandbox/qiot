@@ -13,4 +13,8 @@ charts/hub/ocp-srv-install/values.yaml
 - Move to vault + ES for factory
 Factory is still using hardcoded passwords in values.yaml, move to ES for all of them
 
+- Define the best way to push down the following onto a factory:
+  coreservice.serial=<<YOUR_FACTORY_SERIAL>>,coreservice.name=<<YOUR_FACTORY_NAME>>
 
+My suspicion is that the best approach is to just add tags/metadata to the ACM node and then
+somehow leverage that on the node itself
