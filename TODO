@@ -2,5 +2,15 @@
 
 It needs to loop over each imported cluster in ACM and configure the corresponding vault backend accordingly
 
--  
+- Drop last lookup() calls in:
+charts/hub/ocp-install/charts/issuer/templates/issuer.yaml
+charts/hub/ocp-install/charts/influxdb2/templates/secret.yaml
+
+- Move to external secrets for the sasl configuration
+charts/region/sno-srv-install/values.yaml
+charts/hub/ocp-srv-install/values.yaml
+
+- Move to vault + ES for factory
+Factory is still using hardcoded passwords in values.yaml, move to ES for all of them
+
 
