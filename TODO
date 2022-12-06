@@ -18,3 +18,5 @@ Factory is still using hardcoded passwords in values.yaml, move to ES for all of
 
 My suspicion is that the best approach is to just add tags/metadata to the ACM node and then
 somehow leverage that on the node itself
+
+- Drop the ansible-job copying service-cert.ca from configmap to secret for cert-manager if https://github.com/openshift/service-ca-operator/pull/205 or something similar ever gets merged
