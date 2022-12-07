@@ -16,7 +16,13 @@ Factory is still using hardcoded passwords in values.yaml, move to ES for all of
 - Define the best way to push down the following onto a factory:
   coreservice.serial=<<YOUR_FACTORY_SERIAL>>,coreservice.name=<<YOUR_FACTORY_NAME>>
 
+The coreservice.name can be figured out locally on the cluster, either via ACM or the ingress dns lookup
+
 My suspicion is that the best approach is to just add tags/metadata to the ACM node and then
-somehow leverage that on the node itself
+somehow leverage that on the node itself. We could probably get away with:
+$ oc get clusterclaims/clustergroup -o jsonpath='{ .spec.value }'
+group-one
+
+Replace clustergroup with some serial info etc.
 
 - Drop the ansible-job copying service-cert.ca from configmap to secret for cert-manager if https://github.com/openshift/service-ca-operator/pull/205 or something similar ever gets merged
