@@ -1,0 +1,480 @@
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-sa.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: mongodb
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-sa.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: postgresql
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-certificate.yaml
+apiVersion: v1
+data:
+  PASSWORD: cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  name: keystore-endpoint-service-edge
+type: Opaque
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: mongodb
+stringData:
+  MONGO_INITDB_ROOT_USERNAME: qiotroot
+  MONGO_INITDB_ROOT_PASSWORD: qiotrootpassword
+  MONGODB_ADMIN_PASSWORD: qiotrootpassword
+  MONGODB_DATABASE: qiot_manufacturing
+  MONGODB_PASSWORD: qiotmanufacturingpassword
+  MONGODB_USER: qiotmanufacturing
+type: Opaque
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: postgresql
+stringData:
+  POSTGRESQL_DATABASE: qiot_manufacturing
+  POSTGRESQL_PASSWORD: qiotmanufacturingpassword
+  POSTGRESQL_USER: qiotmanufacturing
+type: Opaque
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: amqbroker-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual 
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /var/hpvolumes/amqbroker
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual 
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /var/hpvolumes/mongodb
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgresql-pv
+  labels:
+    type: local
+spec:
+  storageClassName: manual 
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /var/hpvolumes/postgresql
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: broker-service-broker-service-ss-0
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: manual
+  volumeName: amqbroker-pv
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: manual
+  volumeName: mongodb-pv
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: manual
+  volumeName: postgresql-pv
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-rb.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mongo-privileged
+subjects:
+  - kind: ServiceAccount
+    name: mongodb
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:openshift:scc:privileged'
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-rb.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: postgresql-privileged
+subjects:
+  - kind: ServiceAccount
+    name: postgresql
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: 'system:openshift:scc:privileged'
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongodb
+spec:
+  ports:
+    - name: 27017-tcp
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+  selector:
+    app: mongodb
+    deploymentconfig: mongodb
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-service.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgresql
+spec:
+  ports:
+    - name: postgresql
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgresql
+  type: ClusterIP
+  sessionAffinity: None
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+---
+# Source: manufacturing-comp-factory-sno-install/templates/mongodb/mongo-deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: mongodb
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: mongodb
+        deploymentconfig: mongodb
+    spec:
+      restartPolicy: Always
+      serviceAccountName: mongodb
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsUser: 0
+      containers:
+        - resources:
+            limits:
+              cpu: 500m
+              memory: 2Gi
+          terminationMessagePath: /dev/termination-log
+          name: mongodb
+          ports:
+            - containerPort: 27017
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: mongodb-1
+              mountPath: /var/lib/mongodb/data
+          terminationMessagePolicy: File
+          envFrom:
+            - secretRef:
+                name: mongodb
+          image: >-
+            registry.redhat.io/rhscl/mongodb-36-rhel7:latest
+      serviceAccount: mongodb
+      volumes:
+        - name: mongodb-1
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+# Source: manufacturing-comp-factory-sno-install/templates/postgresql/postgresql-deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: postgresql
+  labels:
+    app: postgresql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: postgresql
+        deploymentconfig: postgresql
+      annotations:
+        openshift.io/generated-by: OpenShiftWebConsole
+    spec:
+      restartPolicy: Always
+      serviceAccountName: postgresql
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsUser: 1000
+      containers:
+        - resources: {}
+          terminationMessagePath: /dev/termination-log
+          name: postgresql
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: postgresql-1
+              mountPath: /var/lib/pgsql/data
+          terminationMessagePolicy: File
+          envFrom:
+            - secretRef:
+                name: postgresql
+          image: >-
+            registry.redhat.io/rhel8/postgresql-13:latest
+      serviceAccount: postgresql
+      volumes:
+        - name: postgresql-1
+          persistentVolumeClaim:
+            claimName: postgresql-pvc
+      dnsPolicy: ClusterFirst
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-broker.yaml
+apiVersion: broker.amq.io/v2alpha4
+kind: ActiveMQArtemis
+metadata:
+  name: broker-service
+  #application: broker-service
+spec:
+  adminPassword: qiotmanufacturingpassword
+  deploymentPlan:
+    size: 1
+    persistenceEnabled: false
+    journalType: nio
+    requireLogin: false
+    messageMigration: false
+    managementRBACEnabled: true
+    journalType: aio
+    jolokiaAgentEnabled: false
+    image: placeholder
+  adminUser: qiotmanufacturing
+  console:
+    expose: true
+  acceptors:
+    - name: edge
+      port: 61617
+      wantClientAuth: true
+      expose: true
+      needClientAuth: true
+      sslEnabled: true
+      protocols: core
+      sslSecret: endpoint-service-tls-secret
+      sslProvider: JDK
+  upgrades:
+      enabled: false
+      minor: false
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: endpoint-service-edge
+  labels:
+    cert-manager.io/certificate-name: endpoint-service-edge
+spec:
+  commonName: broker-service-edge-0-svc.default.svc
+  dnsNames:
+    - broker-service-edge-0-svc.default.svc
+    - broker-service-edge-0-svc-rte.default.qiot-project.io
+    - broker-service-edge-0-svc-rte-default.manufacturingfacility.qiot.io
+  issuerRef:
+    name: factory
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: PASSWORD
+        name: keystore-endpoint-service-edge
+#    jks:
+#      create: true
+#      passwordSecretRef:
+#        key: PASSWORD
+#        name: keystore-endpoint-service-edge
+  secretName: endpoint-service-edge-secret
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-sa.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: region-sno-install-manufacturing-comp-factory-sno-install
+  labels:
+    helm.sh/chart: manufacturing-comp-factory-sno-install-0.0.1
+    app.kubernetes.io/name: manufacturing-comp-factory-sno-install
+    app.kubernetes.io/instance: region-sno-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: region-sno-install-manufacturing-comp-factory-sno-install
+  labels:
+    helm.sh/chart: manufacturing-comp-factory-sno-install-0.0.1
+    app.kubernetes.io/name: manufacturing-comp-factory-sno-install
+    app.kubernetes.io/instance: region-sno-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+- kind: ServiceAccount
+  name: region-sno-install-manufacturing-comp-factory-sno-install
+---
+# Source: manufacturing-comp-factory-sno-install/templates/amq/amqbroker-secret.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: region-sno-install-manufacturing-comp-factory-sno-install-secret
+  labels:
+    helm.sh/chart: manufacturing-comp-factory-sno-install-0.0.1
+    app.kubernetes.io/name: manufacturing-comp-factory-sno-install
+    app.kubernetes.io/instance: region-sno-install
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": post-install, post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "region-sno-install"
+      labels:
+        app.kubernetes.io/name: manufacturing-comp-factory-sno-install
+        app.kubernetes.io/instance: region-sno-install
+    spec:
+      serviceAccountName: region-sno-install-manufacturing-comp-factory-sno-install
+      restartPolicy: Never
+      containers:
+      - name: secret
+        image: "quay.io/openshift/origin-cli:4.8"
+        envFrom:
+        - secretRef:
+            name: keystore-endpoint-service-edge
+        command:
+        - /bin/bash
+        - '-c'
+        - |
+            #!/bin/bash
+
+            # In case the certificate takes too long to get generated(Seems an issue with multiple cr instead of one...)
+            # oc delete cr -lcert-manager.io/certificate-name=endpoint-service-edge -n factory
+            sleep 10
+
+            mkdir -p /tmp/edge
+            oc extract secret/endpoint-service-edge-secret -n factory --to=/tmp/edge/
+
+            oc create secret generic endpoint-service-tls-secret -n factory \
+            --from-file=broker.ks=/tmp/edge/keystore.p12 \
+            --from-file=client.ts=/tmp/edge/truststore.p12 \
+            --from-literal=keyStorePassword=$PASSWORD \
+            --from-literal=trustStorePassword=$PASSWORD
+
+            rm -fr /tmp/edge
+            
+            # in an enterprise environment the "oc delete" MUST be replaced with LABEL SELECTOR
+            oc delete pod broker-service-ss-0 -n factory

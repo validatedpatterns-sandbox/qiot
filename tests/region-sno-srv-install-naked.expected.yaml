@@ -1,0 +1,451 @@
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-sa.yaml
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: facility-manager
+---
+# Source: manufacturing-srv-factory-sno-install/templates/commons/stream-serviceclient-secret.yaml
+apiVersion: v1
+data:
+  streamservice.ts: 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
+kind: Secret
+metadata:
+  name: stream-service-truststore
+type: Opaque
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facitlity-manager-service-certificate.yaml
+apiVersion: v1
+data:
+  PASSWORD: cGFzc3dvcmQ=
+kind: Secret
+metadata:
+  name: keystore-facility-manager-service
+type: Opaque
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-cm.yaml
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.ssl.native=true
+    quarkus.http.ssl-port=8443
+    quarkus.http.ssl.certificate.key-store-file=/cert/keystore.p12
+    quarkus.http.ssl.certificate.key-store-password=password
+    quarkus.http.insecure-requests=enabled
+    plant-manager-api/mp-rest/url=https://plant-manager-service-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com
+    plant-manager-api/mp-rest/trustStore=/certbootstrap/bootstrap.ts
+    plant-manager-api/mp-rest/trustStorePassword=password
+    registration-service-api/mp-rest/url=http://registration-service:8080
+    quarkus.datasource.jdbc.url=jdbc:postgresql://postgresql:5432/qiot_manufacturing
+    quarkus.kubernetes-client.namespace=default
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com:443
+    kafka.ssl.truststore.location=/var/data/qiot/factory/data/streamservice.ts
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_SSL
+    kafka.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="subscription-producer" password="nV167Hh2C6Sd";
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.outgoing.machinerysubscription.connector=smallrye-kafka
+    mp.messaging.outgoing.machinerysubscription.topic=machinerysubscription
+    mp.messaging.outgoing.machinerysubscription.value.serializer=io.qiot.manufacturing.datacenter.commons.util.serializer.MachinerySubscriptionRequestSerializer
+kind: ConfigMap
+metadata:
+  name: facility-manager-service
+---
+# Source: manufacturing-srv-factory-sno-install/templates/product-line-service/product-line-service-cm.yaml
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.artemis.url=tcp://broker-service-hdls-svc:61616
+    quarkus.mongodb.connection-string=mongodb://mongodb:27017
+    quarkus.mongodb.database=qiot_manufacturing
+    quarkus.mongodb.credentials.username=qiotmanufacturing
+    quarkus.mongodb.credentials.password=qiotmanufacturingpassword
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com:443
+    kafka.ssl.truststore.location=/var/data/qiot/factory/data/streamservice.ts
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_SSL
+    kafka.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="productline-consumer" password="UjlcgBjcs4fP";
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.incoming.productline.connector=smallrye-kafka
+    mp.messaging.incoming.productline.topic=productline
+    mp.messaging.incoming.productline.auto-generated-client-id=true
+    mp.messaging.incoming.productline.auto.offset.reset=latest
+    mp.messaging.incoming.productline.group.id=product-line
+    mp.messaging.incoming.productline.failure-strategy=ignore
+kind: ConfigMap
+metadata:
+  name: product-line-service
+---
+# Source: manufacturing-srv-factory-sno-install/templates/production-validator-service/production-validator-service-cm.yaml
+apiVersion: v1
+data:
+  application.properties: |-
+    quarkus.log.level=INFO
+    quarkus.log.category."io.qiot.manufacturing".level=DEBUG
+    quarkus.ssl.native=false
+    quarkus.native.enable-all-security-services=false
+    factoryproductline-api/mp-rest/url=http://product-line-service:8080
+    facility-manager-api/mp-rest/url=http://facility-manager-service:8080
+    quarkus.artemis.url=tcp://broker-service-hdls-svc:61616
+    kafka.bootstrap.servers=stream-service-kafka-bootstrap-manufacturing-dev.apps.cluster-4ktth.4ktth.sandbox1357.opentlc.com:443
+    kafka.ssl.truststore.location=/var/data/qiot/factory/data/streamservice.ts
+    kafka.ssl.truststore.password=password
+    kafka.security.protocol=SASL_SSL
+    kafka.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="telemetry-producer" password="IXROfcbJbHbD";
+    kafka.sasl.mechanism=SCRAM-SHA-512
+    mp.messaging.outgoing.telemetryproduction.connector=smallrye-kafka
+    mp.messaging.outgoing.telemetryproduction.topic=telemetryproduction
+    mp.messaging.outgoing.telemetryproduction.value.serializer=io.qiot.manufacturing.factory.productionvalidation.util.serializer.ProductionTelemetrySerializer
+kind: ConfigMap
+metadata:
+  name: production-validator-service
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-rolebinding.yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: facility-manager-privileged
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: facility-manager
+    namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: facility-manager-service
+spec:
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: tcp-internal
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: tcp-external
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app: facility-manager-service
+    deploymentconfig: facility-manager-service
+  sessionAffinity: None
+  type: ClusterIP
+---
+# Source: manufacturing-srv-factory-sno-install/templates/product-line-service/product-line-service-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-line-service
+spec:
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: 8080-tcp
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: product-line-service
+    deploymentconfig: product-line-service
+  sessionAffinity: None
+  type: ClusterIP
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: facility-manager-service
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: facility-manager-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: df89c5a9c80fee1cf065a41bb149ebe2afbd6ed3acd5f081d5630af6fa4347cf
+      labels:
+        app: facility-manager-service
+        deploymentconfig: facility-manager-service
+    spec:
+      containers:
+      - image: quay.io/qiotmanufacturing/factory-facility-manager
+        imagePullPolicy: Always
+        name: facility-manager-service
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /config
+          name: facility-manager-service
+        - mountPath: /cert/
+          name: facility-manager-service-1
+          readOnly: true
+        - mountPath: /certbootstrap/
+          name: facility-manager-service-2
+          readOnly: true
+        - mountPath: /var/data/qiot/factory/data/
+          name: streamservice
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      serviceAccountName: facility-manager
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: facility-manager-service
+        name: facility-manager-service
+      - name: facility-manager-service-1
+        secret:
+          defaultMode: 420
+          secretName: facility-manager-service-secret
+      - name: facility-manager-service-2
+        secret:
+          defaultMode: 420
+          secretName: bootstrap-certificate-client
+      - name: streamservice
+        secret:
+          defaultMode: 420
+          secretName: stream-service-truststore
+---
+# Source: manufacturing-srv-factory-sno-install/templates/product-line-service/product-line-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-line-service
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: product-line-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 745bc87948544cb85c1f31f890b13af540c51ded5409c215a0ab6ad403b220db
+      labels:
+        app: product-line-service
+        deploymentconfig: product-line-service
+    spec:
+      containers:
+      - image: quay.io/qiotmanufacturing/factory-product-line
+        imagePullPolicy: Always
+        name: product-line-service
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /config
+          name: product-line-service
+        - mountPath: /var/data/qiot/factory/data/
+          name: streamservice
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: product-line-service
+        name: product-line-service
+      - name: streamservice
+        secret:
+          defaultMode: 420
+          secretName: stream-service-truststore
+---
+# Source: manufacturing-srv-factory-sno-install/templates/production-validator-service/production-validator-service-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: production-validator-service
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: production-validator-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: ebc3eec2f3975e1c4c7c08aa539d1efa64f2f69300e383aaec8cf498fcfb8f9d
+      labels:
+        app: production-validator-service
+        deploymentconfig: production-validator-service
+    spec:
+      containers:
+      - image: quay.io/qiotmanufacturing/factory-production-validator
+        imagePullPolicy: Always
+        name: production-validator-service
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /config
+          name: production-validator-service
+        - mountPath: /var/data/qiot/factory/data/
+          name: streamservice
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: production-validator-service
+        name: production-validator-service
+      - name: streamservice
+        secret:
+          defaultMode: 420
+          secretName: stream-service-truststore
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facitlity-manager-service-certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: facility-manager-service
+  labels:
+    cert-manager.io/certificate-name: facility-manager-service
+spec:
+  commonName: facility-manager-service.default.svc
+  dnsNames:
+    - facility-manager-service.default.svc
+    - facility-manager-service.default.qiot-project.io
+    - facility-manager-service-default.manufacturingfacility.qiot.io
+  issuerRef:
+    name: factory
+  keystores:
+    pkcs12:
+      create: true
+      passwordSecretRef:
+        key: PASSWORD
+        name: keystore-facility-manager-service
+  secretName: facility-manager-service-secret
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-is.yaml
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: facility-manager-service
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/qiotmanufacturing/factory-facility-manager
+    generation: 2
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Local
+---
+# Source: manufacturing-srv-factory-sno-install/templates/product-line-service/product-line-service-is.yaml
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: product-line-service
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/qiotmanufacturing/factory-product-line
+    generation: 2
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Local
+---
+# Source: manufacturing-srv-factory-sno-install/templates/production-validator-service/production-validator-service-is.yaml
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: production-validator-service
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - from:
+      kind: DockerImage
+      name: quay.io/qiotmanufacturing/factory-production-validator
+    generation: 2
+    importPolicy: {}
+    name: latest
+    referencePolicy:
+      type: Local
+---
+# Source: manufacturing-srv-factory-sno-install/templates/facility-manager-service/facility-manager-service-route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: facility-manager-service
+spec:
+  port:
+    targetPort: tcp-external
+  tls:
+    termination: passthrough
+  wildcardPolicy: None
+  to:
+    kind: Service
+    name: facility-manager-service
+    weight: 100
+  wildcardPolicy: None
+---
+# Source: manufacturing-srv-factory-sno-install/templates/product-line-service/product-line-service-route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: product-line-service
+spec:
+  port:
+    targetPort: 8080-tcp
+  to:
+    kind: Service
+    name: product-line-service
+    weight: 100
+  wildcardPolicy: None
