@@ -1,0 +1,269 @@
+---
+# Source: issuer/templates/issuer.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: registration-service-secret
+  annotations:
+    kubernetes.io/service-account.name: registration-service
+type: kubernetes.io/service-account-token
+---
+# Source: issuer/templates/cleanup.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-charts-issuer-cleanup
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: vault
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "hub-ocp-install-charts-issuer"
+      labels:
+        app.kubernetes.io/name: issuer
+        app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cleanup
+        envFrom:
+        - secretRef:
+            name: vault-bootstrap
+        image: registry.connect.redhat.com/hashicorp/vault:1.11.3-ubi
+        env:
+        - name: VAULT_ADDR
+          value: https://vault.vault.svc.cluster.local:8200
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+
+          if [ "$#" -ne 1 ]; then
+              echo "Missing Projects"
+          fi
+
+          export BASE_DOMAIN=qiot-project.io
+          export PROJECT=default
+          export PKI=${PROJECT}-pki
+          export DOMAIN=${PROJECT}.$BASE_DOMAIN
+          export ROLE=${PROJECT}-$BASE_DOMAIN
+          # In future create a dedicate SA during project provision
+          export SERVICE_ACCOUNT=default
+          export WILDCARD_DOMAIN=
+
+          echo "Cleanup on ${PROJECT}"
+
+          echo "Disable PKI Engine ${PKI}"
+
+          vault secrets disable -tls-skip-verify --path=${PKI}
+
+          vault delete --tls-skip-verify auth/kubernetes/role/${ROLE}
+---
+# Source: issuer/templates/setup.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-charts-issuer-setup
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: vault
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 120
+  template:
+    metadata:
+      name: "hub-ocp-install-charts-issuer"
+      labels:
+        app.kubernetes.io/name: issuer
+        app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: policy
+        envFrom:
+        - secretRef:
+            name: vault-bootstrap
+        image: registry.connect.redhat.com/hashicorp/vault:1.11.3-ubi
+        env:
+        - name: VAULT_ADDR
+          value: https://vault.vault.svc.cluster.local:8200
+        command:
+        - /bin/sh
+        - '-c'
+        - |
+
+          if [ "$#" -ne 1 ]; then
+              echo "Missing Projects"
+          fi
+
+          export BASE_DOMAIN=qiot-project.io
+          export PROJECT=default
+          export PKI=${PROJECT}-pki
+          export DOMAIN=${PROJECT}.$BASE_DOMAIN
+          export ROLE=${PROJECT}-$BASE_DOMAIN
+          # In future create a dedicate SA during project provision
+          export SERVICE_ACCOUNT=default
+          export WILDCARD_DOMAIN=
+
+          echo "Setup on ${PROJECT}"
+
+          echo "Enable PKI Engine ${PKI}"
+
+          vault secrets enable -tls-skip-verify -path=${PKI} -description="$PROJECT - Root CA" pki
+          # 1 Year
+          vault secrets tune -tls-skip-verify -max-lease-ttl=8760h ${PKI}
+
+          vault write -tls-skip-verify ${PKI}/root/generate/internal \
+              common_name=${DOMAIN} \
+              ttl=8760h
+
+          echo "CRL Configuration"
+
+          vault write -tls-skip-verify ${PKI}/config/urls \
+              issuing_certificates="$VAULT_ADDR/v1/${PKI}/ca" \
+              crl_distribution_points="$VAULT_ADDR/v1/${PKI}/crl"
+
+          echo "$VAULT_ADDR/v1/${PKI}/ca"
+          echo "$VAULT_ADDR/v1/${PKI}/crl"
+
+          echo "Configure Role for domain: ${DOMAIN}"
+
+          vault write -tls-skip-verify ${PKI}/roles/${BASE_DOMAIN} \
+              allowed_domains=${DOMAIN},${PROJECT}.svc,${WILDCARD_DOMAIN} \
+              allow_subdomains=true \
+              allowed_other_sans="*" \
+              allow_glob_domains=true \
+              allowed_uri_sans=*-${PROJECT}.${WILDCARD_DOMAIN} \
+              max_ttl="31536000"
+
+          echo "Create PKI Policy pki-${ROLE}-policy"
+
+          vault policy write --tls-skip-verify pki-${ROLE}-policy - <<EOF
+          path "${PKI}*"                               { capabilities = ["read", "list"] }
+          path "${PKI}/roles/${BASE_DOMAIN}"   { capabilities = ["create", "update"] }
+          path "${PKI}/sign/${BASE_DOMAIN}"    { capabilities = ["create", "update"] }
+          path "${PKI}/issue/${BASE_DOMAIN}"   { capabilities = ["create"] }
+          EOF
+
+          echo "Authorize ServiceAccount ${SERVICE_ACCOUNT} on ${PROJECT}"
+
+          vault write --tls-skip-verify auth/kubernetes/role/${ROLE} \
+            bound_service_account_names=${SERVICE_ACCOUNT} bound_service_account_namespaces="${PROJECT}" \
+            policies=pki-${ROLE}-policy \
+            ttl=2h
+
+          cat > /tmp/policy.hcl << EOF
+            path "sys/mounts/default-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+
+            path "/default-pki-*" {
+              capabilities = ["create", "read", "update", "delete", "list"]
+            }
+          EOF
+
+          vault policy write -tls-skip-verify registration-default-admin /tmp/policy.hcl
+
+          vault write -tls-skip-verify auth/kubernetes/role/default-reg-policy \
+            bound_service_account_names=registration-service \
+            bound_service_account_namespaces=default \
+            policies=registration-default-admin ttl=1h
+---
+# Source: issuer/templates/waitforsecret.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hub-ocp-install-charts-issuer-wait-for-secret
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+  namespace: default
+spec:
+  template:
+    spec:
+      serviceAccountName: registration-service
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: quay.io/openshift/origin-cli:4.1
+        command:
+        - /bin/bash
+        - -c
+        - |
+          while ! kubectl get secret openshift-service-ca.crt --namespace default; do
+            echo "Waiting for my secret. CTRL-C to exit."; sleep 1
+          done
+        name: wait-for-openshift-service-ca-secret
+      dnsPolicy: ClusterFirst
+---
+# Source: issuer/templates/issuer.yaml
+# Force a token for the vault user so we can use its name in the vault issuer template
+---
+# Source: issuer/templates/certificate.yaml
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hub-ocp-install-charts-issuer-dummy
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  commonName: dummy.default.qiot-project.io 
+  dnsNames:
+    - dummy.default.qiot-project.io 
+  secretName: hub-ocp-install-charts-issuer-dummy-cert
+  issuerRef:
+    name: hub-ocp-install-charts-issuer-vault
+---
+# Source: issuer/templates/issuer.yaml
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: hub-ocp-install-charts-issuer-vault
+  labels:
+    helm.sh/chart: issuer-0.1.0
+    app.kubernetes.io/name: issuer
+    app.kubernetes.io/instance: hub-ocp-install-charts-issuer
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  vault:
+    path: default-pki/sign/qiot-project.io 
+    server: https://vault.vault.svc.cluster.local:8200
+    caBundleSecretRef:
+      name: openshift-service-ca.crt
+      key: caBundle
+    auth:
+      kubernetes:
+        #role: default-qiot-project.io
+        role: manufacturing-dev-reg-policy
+        mountPath: /v1/auth/kubernetes
+        secretRef:
+          name: registration-service-secret
+          key: token
