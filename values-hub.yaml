@@ -5,9 +5,6 @@ global:
     name: vault-backend
     kind: ClusterSecretStore
 
-cert-manager:
-  installCRDs: true
-
 clusterGroup:
   name: hub
   isHubCluster: true
