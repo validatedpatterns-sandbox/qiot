@@ -1,0 +1,68 @@
+global:
+  options:
+    useCSV: False
+    syncPolicy: Automatic
+    installPlanApproval: Automatic
+
+clusterGroup:
+  name: region-one
+  isHubCluster: false
+
+  namespaces:
+  - cert-manager
+  - factory
+  - golang-external-secrets
+
+  subscriptions:
+    amq-broker:
+      name: amq-broker-rhel8
+      namespace: factory
+      channel: 7.10.x
+
+    golang-external-secrets:
+      name: golang-external-secrets
+      namespace: golang-external-secrets
+      project: eso
+      path: common/golang-external-secrets
+
+    cert-manager-dev:
+      name: cert-manager
+      channel: stable
+      source: community-operators
+      csv: cert-manager.v1.10.1
+
+  projects:
+  - factory
+  - eso
+
+  applications:
+    sno-volumes-install:
+      name: sno-volumes-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-volumes-install
+
+    sno-core-install:
+      name: sno-core-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-core-install
+
+    sno-install:
+      name: sno-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-install
+
+    sno-srv-install:
+      name: sno-srv-install
+      namespace: factory
+      project: factory
+      path: charts/region/sno-srv-install
+
+  imperative:
+    # NOTE: We *must* use lists and not hashes. As hashes lose ordering once parsed by helm
+    jobs:
+    - name: get-hub
+      playbook: ansible/playbooks/on-regional-get-hub-ca.yml
+      timeout: 123
