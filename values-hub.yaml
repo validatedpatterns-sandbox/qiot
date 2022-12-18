@@ -107,6 +107,9 @@ clusterGroup:
     jobs:
     - name: openshift-service-ca-secret
       playbook: ansible/playbooks/copy-service-ca-crt-to-secret.yml
+    - name: configure-vault-pki-backends
+      playbook: ansible/playbooks/on-hub-configure-vault-pki.yml
+      timeout: 120
 
   managedClusterGroups:
     exampleRegion:
