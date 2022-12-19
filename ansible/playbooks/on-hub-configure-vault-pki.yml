@@ -1,0 +1,190 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  vars:
+    ns: imperative
+    eso_ns: golang-external-secrets
+    eso_sa: golang-external-secrets
+    eso_secret: golang-external-secrets
+    vault_ns: "vault"
+    vault_pod: "vault-0"
+    vault_capabilities: '[\\\"read\\\"]'
+    vault_ttl: "15m"
+  tasks:
+    - name: Find managed clusters
+      kubernetes.core.k8s_info:
+        kind: ManagedCluster
+        api_version: "cluster.open-cluster-management.io/v1"
+      register: managed_clusters
+
+    - name: Set resource fact
+      ansible.builtin.set_fact:
+        resources: "{{ managed_clusters['resources'] }}"
+
+    - name: Do nothing when no managed clusters are found
+      ansible.builtin.meta: end_play
+      when: resources | length == 0 or managed_clusters.failed or not managed_clusters.api_found
+
+    - name: Loop over returned ACM managedclusters
+      ansible.builtin.set_fact:
+        clusters: "{{ clusters|default({}) | combine( { item.metadata.name: { 'caBundle': item.spec.managedClusterClientConfigs[0].caBundle | b64decode } } ) }}"
+      loop: "{{ resources }}"
+      loop_control:
+        label: "{{ item.metadata.name }}"
+
+    - name: Extract ClusterGroup
+      ansible.builtin.set_fact:
+        clusters: "{{ clusters|default({}) | combine( { item.metadata.name: { 'clusterGroup': item.metadata.labels.clusterGroup } }, recursive=True ) }}"
+      when: "'clusterGroup' in item.metadata.labels"
+      loop: "{{ resources }}"
+      loop_control:
+        label: "{{ item.metadata.name }}"
+
+    - name: Fetch all ACM secrets
+      kubernetes.core.k8s_info:
+        kind: Secret
+        label_selectors:
+        - "apps.open-cluster-management.io/secret-type=acm-cluster"
+      register: acm_secrets
+
+    - name: Set cleaned_acm_secrets fect
+      ansible.builtin.set_fact:
+        cleaned_acm_secrets: "{{ acm_secrets.resources | parse_acm_secrets }}"
+
+    - name: Merge the two dicts together
+      ansible.builtin.set_fact:
+        clusters_info: "{{ clusters | combine(cleaned_acm_secrets, recursive=True) }}"
+
+    - name: write out CAs
+      ansible.builtin.copy:
+        content: "{{ item.value['caBundle'] }}"
+        dest: "/tmp/{{ item.key }}.ca"
+      loop: "{{ clusters_info | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: DEBUG BANDINI1
+      ansible.builtin.debug:
+        msg: "{{ clusters_info }}"
+
+    - name: Fetch remote test ansible to remote cluster
+      kubernetes.core.k8s_info:
+        api_key: "{{ clusters_info[item.key]['bearerToken'] }}"
+        ca_cert: /tmp/{{ item.key}}.ca
+        host: "{{ clusters_info[item.key]['server_api'] }}"
+        kind: Secret
+        namespace: "{{ eso_ns }}"
+        name: "{{ eso_secret }}"
+        api_version: v1
+      register: remote_eso_sa
+      loop: "{{ clusters_info | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: DEBUG BANDINI11
+      ansible.builtin.debug:
+        msg: "{{ remote_eso_sa }}"
+
+    - name: Loop over returned ESO tokens
+      ansible.builtin.set_fact:
+        clusters_info: "{{ clusters_info | default({}) | combine( { item['item']['key']: { 'esoToken': item['resources'][0]['data']['token'] | b64decode } }, recursive=True) }}"
+      loop: "{{ remote_eso_sa.results }}"
+      loop_control:
+        label: "{{ item['item']['key'] }}"
+
+# At this point clusters_info contains a per cluster hash table with *all* the
+# attributes of all acm-imported clusters. For example:
+# "mcg-one": {
+#   "bearerToken": "ey...",
+#   "caBundle": "-----BEGIN CERTIFICATE-----\nMIIDMjCCA",
+#   "clusterGroup": "group-one",
+#   "cluster_fqdn": "mcg-one.blueprints.rhecoeng.com",
+#   "name": "mcg-one",
+#   "server_api": "https://api.mcg-one.blueprints.rhecoeng.com:6443",
+#   "tlsClientConfig": {
+#     "insecure": true
+#   }
+# }
+    - name: DEBUG BANDINI2
+      ansible.builtin.debug:
+        msg: "{{ clusters_info }}"
+
+    - name: Dump CABundles into the vault
+      kubernetes.core.k8s_exec:
+        namespace: "{{ vault_ns }}"
+        pod: "{{ vault_pod }}"
+        command: bash -e -c "echo '{{ item.value['caBundle'] }}' > /tmp/{{ item.value['cluster_fqdn'] }}.ca"
+      loop: "{{ clusters_info | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    # - name: Is kubernetes backend already enabled
+    #   no_log: False
+    #   kubernetes.core.k8s_exec:
+    #     namespace: "{{ vault_ns }}"
+    #     pod: "{{ vault_pod }}"
+    #     command: bash -e -c "if vault auth list | grep -e ^'{{ item.value['cluster_fqdn'] }}'; then
+    #         echo done; else
+    #         vault auth enable -path='{{ item.value['cluster_fqdn'] }}' kubernetes; fi"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
+
+    # - name: Configure kubernetes backend
+    #   no_log: False
+    #   kubernetes.core.k8s_exec:
+    #     namespace: "{{ vault_ns }}"
+    #     pod: "{{ vault_pod }}"
+    #     command: bash -e -c "vault write auth/{{ item.value['cluster_fqdn'] }}/config
+    #         token_reviewer_jwt=\"{{ item.value['esoToken'] }}\"
+    #         kubernetes_host=\"{{ item.value['server_api'] }}\"
+    #         kubernetes_ca_cert=@/tmp/{{ item.value['cluster_fqdn'] }}.ca"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
+
+    # - name: Configure policy template
+    #   kubernetes.core.k8s_exec:
+    #     namespace: "{{ vault_ns }}"
+    #     pod: "{{ vault_pod }}"
+    #     command: >
+    #       bash -e -c "echo \"path \\\"secret/data/{{ item.value['cluster_fqdn'] }}/*\\\" {
+    #         capabilities = {{ vault_capabilities }} }\" > /tmp/policy-{{ item.value['cluster_fqdn'] }}.hcl"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
+
+    # - name: Configure policy for spokes
+    #   kubernetes.core.k8s_exec:
+    #     namespace: "{{ vault_ns }}"
+    #     pod: "{{ vault_pod }}"
+    #     command: "vault policy write {{ item.value['cluster_fqdn'] }}-secret /tmp/policy-{{ item.value['cluster_fqdn'] }}.hcl"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
+
+    # - name: debugme1
+    #   ansible.builtin.debug:
+    #     msg: >
+    #       vault write auth/"{{ item.value['cluster_fqdn'] }}"/role/"{{ item.value['cluster_fqdn'] }}"-role
+    #         bound_service_account_names="{{ eso_ns }}"
+    #         bound_service_account_namespaces="{{ eso_sa }}"
+    #         policies="default,{{ item.value['cluster_fqdn'] }}-secret" ttl="{{ vault_ttl }}"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
+
+    # - name: Configure kubernetes role for spokes
+    #   kubernetes.core.k8s_exec:
+    #     namespace: "{{ vault_ns }}"
+    #     pod: "{{ vault_pod }}"
+    #     command: >
+    #       vault write auth/"{{ item.value['cluster_fqdn'] }}"/role/"{{ item.value['cluster_fqdn'] }}"-role
+    #         bound_service_account_names="{{ eso_ns }}"
+    #         bound_service_account_namespaces="{{ eso_sa }}"
+    #         policies="default,{{ item.value['cluster_fqdn'] }}-secret" ttl="{{ vault_ttl }}"
+    #   loop: "{{ clusters_info | dict2items }}"
+    #   loop_control:
+    #     label: "{{ item.key }}"
